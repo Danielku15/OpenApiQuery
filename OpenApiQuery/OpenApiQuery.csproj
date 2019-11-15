@@ -2,9 +2,22 @@
 
     <PropertyGroup>
         <TargetFramework>netcoreapp3.0</TargetFramework>
+
+        <IsPackable Condition=" '$(IsPackable)' == '' ">false</IsPackable>
+
+        <PackageVersion>1.0.0</PackageVersion>
+        <PackageId>OpenApiQuery</PackageId>
+        <Title>OpenApiQuery</Title>
+        <Authors>Daniel Kuschny</Authors>
+        <Description>OData based query language for your ASP.net core APIs</Description>
+        <Copyright>(C) 2019 Daniel Kuschny</Copyright>
+        <PackageProjectUrl>https://github.com/Danielku15/OpenApiQuery</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/Danielku15/OpenApiQuery</RepositoryUrl>
+        
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 </Project>
