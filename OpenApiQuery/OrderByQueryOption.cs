@@ -75,9 +75,9 @@ namespace OpenApiQuery
 
             public void Parse(ParameterExpression it)
             {
-                _parser.Push(it);
+                _parser.PushThis(it);
                 OrderByItemList();
-                _parser.Pop();
+                _parser.PopThis();
             }
 
             private void OrderByItemList()

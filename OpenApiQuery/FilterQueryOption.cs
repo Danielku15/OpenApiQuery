@@ -46,9 +46,9 @@ namespace OpenApiQuery
                     var parser = new QueryExpressionParser(values[0], binder);
                     try
                     {
-                        parser.Push(Parameter);
+                        parser.PushThis(Parameter);
                         FilterClause = parser.CommonExpr();
-                        parser.Pop();
+                        parser.PopThis();
                     }
                     catch (Exception e)
                     {

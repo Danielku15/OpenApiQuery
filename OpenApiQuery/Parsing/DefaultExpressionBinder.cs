@@ -10,7 +10,7 @@ namespace OpenApiQuery.Parsing
         public MemberInfo BindMember(System.Linq.Expressions.Expression instance, string memberName)
         {
             var type = instance.Type;
-            var member = type.GetMembers(BindingFlags.Instance | BindingFlags.Public).Single(m =>
+            var member = type.GetMembers(BindingFlags.Instance | BindingFlags.Public).SingleOrDefault(m =>
                 memberName.Equals(m.Name, StringComparison.InvariantCultureIgnoreCase));
             if (member == null)
             {

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenApiQuery.Sample.Models;
@@ -16,6 +17,16 @@ namespace OpenApiQuery.Test.Sample
             new User {Username = "D", FirstName = "Name1"}
         };
 
+        [TestMethod]
+        public async Task TestOrderBy_MultipleTimes_BadRequest()
+        {
+            using var server = SetupSample(OrderByTestUsers);
+            using var client = server.CreateClient();
+
+            using var response = await client.GetAsync("/users?$orderby=username&$orderby=firstname");
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        
         [TestMethod]
         public async Task TestOrderBy_SingleProperty_DefaultOrderIsAscending()
         {

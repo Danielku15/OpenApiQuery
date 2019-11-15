@@ -15,7 +15,7 @@ namespace OpenApiQuery.Parsing
         private readonly IExpressionBinder _binder;
 
         private char _currentCharacter;
-        private Stack<System.Linq.Expressions.Expression> _parameters = new Stack<System.Linq.Expressions.Expression>();
+        private Stack<System.Linq.Expressions.Expression> _thisValues = new Stack<System.Linq.Expressions.Expression>();
 
         public QueryExpressionTokenKind CurrentTokenKind { get; private set; }
 
@@ -256,14 +256,14 @@ namespace OpenApiQuery.Parsing
             NextToken();
         }
 
-        public void Push(ParameterExpression it)
+        public void PushThis(Expression it)
         {
-            _parameters.Push(it);
+            _thisValues.Push(it);
         }
 
-        public void Pop()
+        public void PopThis()
         {
-            _parameters.Pop();
+            _thisValues.Pop();
         }
 
         public System.Linq.Expressions.Expression CommonExpr()
@@ -606,7 +606,7 @@ namespace OpenApiQuery.Parsing
 
         private System.Linq.Expressions.Expression Primary()
         {
-            var expression = Segment(_parameters.Peek());
+            var expression = Segment(_thisValues.Peek());
             while (CurrentTokenKind == QueryExpressionTokenKind.Slash)
             {
                 NextToken();
@@ -709,7 +709,7 @@ namespace OpenApiQuery.Parsing
 
         public MemberInfo BindMember(string tokenData)
         {
-            return BindMember(_parameters.Peek(), tokenData);
+            return BindMember(_thisValues.Peek(), tokenData);
         }
 
         public MemberInfo BindMember(System.Linq.Expressions.Expression expression, string tokenData)

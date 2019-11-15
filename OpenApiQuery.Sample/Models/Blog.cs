@@ -20,8 +20,8 @@ namespace OpenApiQuery.Sample.Models
         [MaxLength(ModelConstants.LongStringLength)]
         public string Description { get; set; }
 
-        [ForeignKey(nameof(Owner))] public int OwnerId { get; set; }
-
+        [ForeignKey(nameof(Owner))]
+        public int OwnerId { get; set; }
         public User Owner { get; set; }
 
         [InverseProperty(nameof(BlogPost.Blog))]

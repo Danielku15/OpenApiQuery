@@ -71,9 +71,9 @@ namespace OpenApiQuery
 
             public void Parse(ParameterExpression it)
             {
-                _parser.Push(it);
+                _parser.PushThis(it);
                 ExpandItemList();
-                _parser.Pop();
+                _parser.PopThis();
             }
 
             private void ExpandItemList()
@@ -137,6 +137,7 @@ namespace OpenApiQuery
                         case "$expand":
                             handler = NestedExpand;
                             break;
+                        // TODO: support also $orderby, $skip, $top here? might need some refactoring to generalize the parameter parsing
                     }
 
                     if (handler != null)
@@ -182,7 +183,10 @@ namespace OpenApiQuery
 
             private void ExpandFilter(ExpandClause clause)
             {
+                clause.FilterParameter = Expression.Parameter(clause.ItemType);
+                _parser.PushThis(clause.FilterParameter);
                 clause.Filter = _parser.CommonExpr();
+                _parser.PopThis();
             }
         }
 
