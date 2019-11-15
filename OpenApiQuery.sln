@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery.Sample", "Open
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery", "OpenApiQuery\OpenApiQuery.csproj", "{6ADAC419-43A0-437B-AD1E-3E8E8B233D25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery.Test", "OpenApiQuery.Test\OpenApiQuery.Test.csproj", "{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{6ADAC419-43A0-437B-AD1E-3E8E8B233D25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6ADAC419-43A0-437B-AD1E-3E8E8B233D25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6ADAC419-43A0-437B-AD1E-3E8E8B233D25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

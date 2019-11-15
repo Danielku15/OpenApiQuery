@@ -3,8 +3,6 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.0</TargetFramework>
 
-        <IsPackable Condition=" '$(IsPackable)' == '' ">false</IsPackable>
-
         <PackageVersion>1.0.0</PackageVersion>
         <PackageId>OpenApiQuery</PackageId>
         <Title>OpenApiQuery</Title>
