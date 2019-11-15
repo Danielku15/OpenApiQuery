@@ -1,20 +1,32 @@
 # OpenApiQuery 
 
-OpenApiQuery is a library inspired by OData to provide an easy way of interacting with your REST api resources. It adopts from OData parts of the query syntax as described in the OData specification [OData Version 4.01. Part 2: URL Conventions]( https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html)
+**Disclaimer:** This project is still in a very early proof-of-concept phase and not ready for any production. 
+
+OpenApiQuery is a library inspired by OData to provide an easy way of interacting with your REST API resources. 
+It adopts from OData parts of the query syntax as described in the OData specification [OData Version 4.01. Part 2: URL Conventions]( https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html)
+
+The ultimate goal is to support a full OData alike experience with using an OpenAPI specification as replacement for the EDM where needed. Hence the name **OpenApi**Query. 
+
 
 ## Framework features
 
-| Feature           | Description                                                                   | Status            |
-| ----------------  | ----------------------------------------------------------------------------- | ----------------- |
-| `$select`         | Limit the returned properties                                                 | Not yet supported |
-| `$filter`         | Filter result entities                                                        | Supported         |
-| `$expand`         | Include related navigation properties                                         | Supported         |
-| `$skip`           | Skip N elements in the result set                                             | Supported         |
-| `$top`            | Select the top N elements in the result set                                   | Supported         |
-| `$count`          | Provide the total count of items in the data source (with filters applied)    | Supported         |
-| `Delta<T>`        | Accept a partial entity                                                       | Not yet supported |
-| `SingleResult<T>` | Return a single entity with select and expand capabilities                    | Not yet supported |
-| Open Types        | Extend your entities with any dynamic property                                | Not yet supported |
+| Feature             | Description                                                                   | Status            |
+| ----------------    | ----------------------------------------------------------------------------- | ----------------- |
+| `$select`           | Limit the returned properties                                                 | Not yet supported |
+| `$filter`           | Filter result entities                                                        | Supported         |
+| `$expand`           | Include related navigation properties                                         | Supported         |
+| `$expand($filter)`  | Filter related navigation properties which are included                       | Not yet supported |
+| `$expand($orderby)` | Apply ordering to the expanded navigation properties                          | Not yet supported |
+| `$expand($skip)`    | Apply paging to the expanded navigation properties                            | Not yet supported |
+| `$expand($top)`     | Apply paging to the expanded navigation properties                            | Not yet supported |
+| `$expand($count)`   | Apply paging to the expanded navigation properties                            | Not yet supported |
+| `$skip`             | Skip N elements in the result set                                             | Supported         |
+| `$top`              | Select the top N elements in the result set                                   | Supported         |
+| `$count`            | Provide the total count of items in the data source (with filters applied)    | Supported         |
+| `Delta<T>`          | Accept a partial entity                                                       | Not yet supported |
+| `SingleResult<T>`   | Return a single entity with select and expand capabilities                    | Not yet supported |
+| Open Types          | Extend your entities with any dynamic property                                | Not yet supported |
+| Data Aggregation    | See [OData Extension for Data Aggregation Version 4.0](http://docs.oasis-open.org/odata/odata-data-aggregation-ext/v4.0/cs01/odata-data-aggregation-ext-v4.0-cs01.html) | Not yet supported |
 
 ## OData URL Conventions Compatibility
 
