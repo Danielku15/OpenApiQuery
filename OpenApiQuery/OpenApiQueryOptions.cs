@@ -6,24 +6,81 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Runtime.Serialization;
+using NJsonSchema.Annotations;
+using NJsonSchema;
 
 namespace OpenApiQuery
 {
     public abstract class OpenApiQueryOptions
     {
+        /// <summary>
+        /// Not yet implemented
+        /// 
+        /// For implementation status, see: https://github.com/Danielku15/OpenApiQuery/issues/2
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$select")]
         public SelectQueryOption Select { get; }
+
+        /// <summary>
+        /// Include related navigation properties
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#_Toc21425351
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$expand")]
         public ExpandQueryOption Expand { get; }
 
+        /// <summary>
+        /// Filter result entities
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#_Toc21425350
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$filter")]
         public FilterQueryOption Filter { get; }
 
+        /// <summary>
+        /// Specify a custom order the result entities
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#_Toc21425353
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$orderby")]
         public OrderByQueryOption OrderBy { get; }
 
+        /// <summary>
+        /// Skip N elements in the result set
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#sec_SystemQueryOptionstopandskip
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$skip")]
         public SkipQueryOption Skip { get; }
 
+
+        /// <summary>
+        /// Select the top N elements in the result set
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#sec_SystemQueryOptionstopandskip
+        /// </summary>
+        [JsonSchema(JsonObjectType.String)]
+        [JsonProperty("$top")]
         public TopQueryOption Top { get; }
 
+
+        /// <summary>
+        /// Provide the total count of items in the data source (with filters applied)
+        /// 
+        /// See: https://docs.oasis-open.org/odata/odata/v4.01/csprd06/part2-url-conventions/odata-v4.01-csprd06-part2-url-conventions.html#sec_SystemQueryOptioncount
+        /// </summary>
+        [JsonSchema(JsonObjectType.Boolean)]
+        [JsonProperty("$count")]
         public CountQueryOption Count { get; }
 
+        [JsonIgnore]
         public Type ElementType { get; }
 
         internal HttpContext HttpContext { get; set; }

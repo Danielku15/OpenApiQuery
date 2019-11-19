@@ -15,7 +15,17 @@
         
     </PropertyGroup>
 
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NJsonSchema" Version="10.0.27" />
+    </ItemGroup>
+
 </Project>

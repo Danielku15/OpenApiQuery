@@ -658,8 +658,7 @@ namespace OpenApiQuery.Parsing
                         var member = BindMember(expression, identifier);
                         return System.Linq.Expressions.Expression.MakeMemberAccess(expression, member);
                     }
-
-                    break;
+                    
                 case QueryExpressionTokenKind.OpenParenthesis:
                     return Parenthsis();
                 default:
