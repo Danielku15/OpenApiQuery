@@ -108,20 +108,23 @@ namespace OpenApiQuery
             var memberBindings = new List<MemberBinding>();
             foreach (var property in itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (expands.TryGetValue(property, out var expand))
+                if (property.CanWrite == true)
                 {
-                    // Prop3 = arg.Prop3.Select( arg1 => new SubItem { SubProp1 = arg1.SubProp1 } ).ToList()
-                    memberBindings.Add(expand.ToMemberBinding(source));
-                }
-                else if (ExpandQueryOption.IsNavigationProperty(property, out _, out _))
-                {
-                    // Prop1 = arg.prop1
-                    memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
-                }
-                else
-                {
-                    // Prop1 = arg.prop1
-                    memberBindings.Add(Expression.Bind(property, Expression.MakeMemberAccess(source, property)));
+                    if (expands.TryGetValue(property, out var expand))
+                    {
+                        // Prop3 = arg.Prop3.Select( arg1 => new SubItem { SubProp1 = arg1.SubProp1 } ).ToList()
+                        memberBindings.Add(expand.ToMemberBinding(source));
+                    }
+                    else if (ExpandQueryOption.IsNavigationProperty(property, out _, out _))
+                    {
+                        // Prop1 = arg.prop1
+                        memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
+                    }
+                    else
+                    {
+                        // Prop1 = arg.prop1
+                        memberBindings.Add(Expression.Bind(property, Expression.MakeMemberAccess(source, property)));
+                    }
                 }
             }
 
