@@ -4,10 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
+using OpenApiQuery.Serialization;
 
 namespace OpenApiQuery
 {
@@ -77,12 +78,9 @@ namespace OpenApiQuery
         private static readonly MediaTypeHeaderValue ApplicationAnyJsonSyntax
             = MediaTypeHeaderValue.Parse("application/*+json").CopyAsReadOnly();
 
-        public JsonSerializerOptions SerializerOptions { get; }
 
-        public OpenApiQueryResultOutputFormatter(JsonSerializerOptions serializerSettings)
+        public OpenApiQueryResultOutputFormatter()
         {
-            SerializerOptions = serializerSettings;
-
             SupportedEncodings.Add(Encoding.UTF8);
             SupportedEncodings.Add(Encoding.Unicode);
             SupportedMediaTypes.Add(ApplicationJson);
@@ -121,13 +119,14 @@ namespace OpenApiQuery
             var queryable = (IQueryable<T>) result.Queryable;
             var appliedQueryResult = await result.QueryOptions.ApplyTo(queryable, context.HttpContext.RequestAborted);
 
-            // TODO: respect select options
             var httpContext = context.HttpContext;
             var writeStream = httpContext.Response.Body;
-            var objectType = appliedQueryResult.GetType();
-            
-            await JsonSerializer.SerializeAsync(writeStream, appliedQueryResult, objectType, SerializerOptions);
-            await writeStream.FlushAsync();
+
+            var serializerProvider = httpContext.RequestServices.GetRequiredService<IOpenApiQuerySerializerProvider>();
+            var serializer = serializerProvider.GetSerializerForResult(httpContext, result, appliedQueryResult);
+            await serializer.SerializeResultAsync(writeStream, result, appliedQueryResult, httpContext.RequestAborted);
+
+            await writeStream.FlushAsync(httpContext.RequestAborted);
         }
     }
 }

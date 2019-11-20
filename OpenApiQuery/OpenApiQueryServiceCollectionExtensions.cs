@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using OpenApiQuery.Parsing;
+using OpenApiQuery.Serialization;
 
 namespace OpenApiQuery
 {
@@ -11,9 +12,11 @@ namespace OpenApiQuery
         public static IMvcCoreBuilder AddOpenApiQuery(this IMvcCoreBuilder builder)
         {
             var services = builder.Services;
+
             services.TryAddEnumerable(ServiceDescriptor
                 .Transient<IConfigureOptions<MvcOptions>, OpenApiOptionsSetup>());
-            services.AddSingleton<IExpressionBinder, DefaultExpressionBinder>();
+            services.AddSingleton<IOpenApiQueryExpressionBinder, DefaultOpenApiQueryExpressionBinder>();
+            services.AddSingleton<IOpenApiQuerySerializerProvider, DefaultOpenApiQuerySerializerProvider>();
 
             return builder;
         }

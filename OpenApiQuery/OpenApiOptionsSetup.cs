@@ -5,15 +5,9 @@ namespace OpenApiQuery
 {
     internal class OpenApiOptionsSetup : IConfigureOptions<MvcOptions>
     {
-        private readonly IOptions<JsonOptions> _jsonOptions;
-
-        public OpenApiOptionsSetup(IOptions<JsonOptions> jsonOptions)
-        {
-            _jsonOptions = jsonOptions;
-        }
         public void Configure(MvcOptions options)
         {
-            var formatter = new OpenApiQueryResultOutputFormatter(_jsonOptions.Value.JsonSerializerOptions);
+            var formatter = new OpenApiQueryResultOutputFormatter();
             options.OutputFormatters.Insert(0, formatter);
         }
     }

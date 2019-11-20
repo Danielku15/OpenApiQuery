@@ -23,6 +23,7 @@ namespace OpenApiQuery.Parsing
         GuidLiteral,
         NullLiteral,
         Equal,
-        Semicolon
+        Semicolon,
+        Star
     }
 }

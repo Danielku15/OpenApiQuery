@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery.Parsing
 {
-    public class DefaultExpressionBinder : IExpressionBinder
+    public class DefaultOpenApiQueryExpressionBinder : IOpenApiQueryExpressionBinder
     {
         public MemberInfo BindMember(System.Linq.Expressions.Expression instance, string memberName)
         {

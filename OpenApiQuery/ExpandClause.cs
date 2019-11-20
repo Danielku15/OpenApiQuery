@@ -1,9 +1,9 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
@@ -11,7 +11,7 @@ namespace OpenApiQuery
     {
         private readonly PropertyInfo _navigationProperty;
         private readonly bool _isCollection;
-        
+
         public Type ItemType { get; }
         public ParameterExpression FilterParameter { get; set; }
         public Expression Filter { get; set; }
@@ -26,7 +26,7 @@ namespace OpenApiQuery
             ItemType = itemType;
         }
 
-        public MemberBinding ToMemberBinding(Expression it)
+        private MemberBinding ToMemberBinding(Expression it, SelectClause selectClause)
         {
             Expression navigationProperty = Expression.MakeMemberAccess(it, _navigationProperty);
 
@@ -52,7 +52,9 @@ namespace OpenApiQuery
             if (_isCollection)
             {
                 // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } )
-                var expression = BuildSelectLambdaExpression(ItemType, NestedExpands);
+                var expression = BuildSelectLambdaExpression(ItemType,
+                    selectClause,
+                    NestedExpands);
 
                 navigationProperty = Expression.Call(null,
                     SelectInfo.MakeGenericMethod(ItemType, ItemType),
@@ -63,7 +65,7 @@ namespace OpenApiQuery
             else
             {
                 // NavigationProperty = new Item { ... }
-                navigationProperty = BuildMemberInit(ItemType, navigationProperty, NestedExpands);
+                navigationProperty = BuildMemberInit(ItemType, navigationProperty, selectClause, NestedExpands);
             }
 
             if (_isCollection)
@@ -84,10 +86,11 @@ namespace OpenApiQuery
         }
 
         internal static LambdaExpression BuildSelectLambdaExpression(Type itemType,
+            SelectClause selectClause,
             IDictionary<PropertyInfo, ExpandClause> expands)
         {
             var arg = Expression.Parameter(itemType);
-            var body = BuildMemberInit(itemType, arg, expands);
+            var body = BuildMemberInit(itemType, arg, selectClause, expands);
             var funcType = typeof(Func<,>).MakeGenericType(itemType, itemType);
 
             // arg => new Item { ... } 
@@ -97,6 +100,7 @@ namespace OpenApiQuery
         private static MemberInitExpression BuildMemberInit(
             Type itemType,
             Expression source,
+            SelectClause select,
             IDictionary<PropertyInfo, ExpandClause> expands)
         {
             // NavigationProperty = it.NavigationProperty.Select( arg => new Item {
@@ -105,20 +109,34 @@ namespace OpenApiQuery
             //    Prop3 = arg.Prop3.Select( arg1 => new SubItem { SubProp1 = arg1.SubProp1 } ).ToList()
             // })
 
+            var selectAllProperties = select == null ||
+                                      select.IsStarSelect || 
+                                      select.SelectClauses == null ||
+                                      select.SelectClauses.Count == 0;
+
             var memberBindings = new List<MemberBinding>();
             foreach (var property in itemType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (expands.TryGetValue(property, out var expand))
                 {
                     // Prop3 = arg.Prop3.Select( arg1 => new SubItem { SubProp1 = arg1.SubProp1 } ).ToList()
-                    memberBindings.Add(expand.ToMemberBinding(source));
+                    if (select?.SelectClauses == null || !select.SelectClauses.TryGetValue(property, out var subSelect))
+                    {
+                        subSelect = new SelectClause
+                        {
+                            SelectedMember = property,
+                            IsStarSelect = true
+                        };
+                    }
+                    memberBindings.Add(expand.ToMemberBinding(source, subSelect));
                 }
-                else if (ExpandQueryOption.IsNavigationProperty(property, out _, out _))
+                else if (SelectExpandQueryOption.IsNavigationProperty(property, out _, out _))
                 {
-                    // Prop1 = arg.prop1
+                    // navigation properties that are not expanded, are not loaded
+                    // Prop1 = null 
                     memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
                 }
-                else
+                else if (selectAllProperties || select.SelectClauses.ContainsKey(property))
                 {
                     // Prop1 = arg.prop1
                     memberBindings.Add(Expression.Bind(property, Expression.MakeMemberAccess(source, property)));

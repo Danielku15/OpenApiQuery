@@ -40,7 +40,7 @@ namespace OpenApiQuery
             {
                 if (values.Count == 1)
                 {
-                    var binder = httpContext.RequestServices.GetRequiredService<IExpressionBinder>();
+                    var binder = httpContext.RequestServices.GetRequiredService<IOpenApiQueryExpressionBinder>();
                     RawValue = values[0];
                     var parser = new OrderByClauseParser(binder, values[0], Clauses);
                     try
@@ -67,7 +67,7 @@ namespace OpenApiQuery
             private readonly QueryExpressionParser _parser;
             private readonly IList<OrderByClause> _clauses;
 
-            public OrderByClauseParser(IExpressionBinder binder, string value, IList<OrderByClause> clauses)
+            public OrderByClauseParser(IOpenApiQueryExpressionBinder binder, string value, IList<OrderByClause> clauses)
             {
                 _parser = new QueryExpressionParser(value, binder);
                 _clauses = clauses;

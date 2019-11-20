@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace OpenApiQuery
+namespace OpenApiQuery.Utils
 {
     internal static class ReflectionHelper
     {
@@ -10,11 +12,41 @@ namespace OpenApiQuery
         {
             return ((MemberExpression) expr.Body).Member;
         }
-        
+
         public static MethodInfo GetMethod<T, TRet>(Expression<Func<T, TRet>> expr)
         {
             var method = ((MethodCallExpression) expr.Body).Method;
             return method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
+        }
+
+        public static bool ImplementsEnumerable(Type type, out Type itemType)
+        {
+            // 1:many
+            var enumerable = type.GetInterfaces().FirstOrDefault(i =>
+                i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            if (enumerable != null)
+            {
+                itemType = enumerable.GetGenericArguments()[0];
+                return true;
+            }
+
+            itemType = null;
+            return false;
+        }
+        
+        public static bool IsEnumerable(Type type, out Type itemType)
+        {
+            // 1:many
+            if (type.IsGenericType &&
+                typeof(IEnumerable<>).MakeGenericType(type.GetGenericArguments()[0])
+                    .IsAssignableFrom(type))
+            {
+                itemType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            itemType = null;
+            return false;
         }
     }
 }

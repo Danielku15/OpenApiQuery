@@ -12,7 +12,7 @@ namespace OpenApiQuery.Parsing
         private const char Eof = '\0';
 
         private readonly string _value;
-        private readonly IExpressionBinder _binder;
+        private readonly IOpenApiQueryExpressionBinder _binder;
 
         private char _currentCharacter;
         private Stack<System.Linq.Expressions.Expression> _thisValues = new Stack<System.Linq.Expressions.Expression>();
@@ -23,7 +23,7 @@ namespace OpenApiQuery.Parsing
 
         public int Position { get; private set; } = -1;
 
-        public QueryExpressionParser(string raw, IExpressionBinder binder)
+        public QueryExpressionParser(string raw, IOpenApiQueryExpressionBinder binder)
         {
             _value = raw;
             _binder = binder;
@@ -97,6 +97,12 @@ namespace OpenApiQuery.Parsing
                 else if (_currentCharacter == ']')
                 {
                     CurrentTokenKind = QueryExpressionTokenKind.CloseBracket;
+                    TokenData = null;
+                    NextCharacter();
+                }
+                else if (_currentCharacter == '*')
+                {
+                    CurrentTokenKind = QueryExpressionTokenKind.Star;
                     TokenData = null;
                     NextCharacter();
                 }
@@ -264,6 +270,11 @@ namespace OpenApiQuery.Parsing
         public void PopThis()
         {
             _thisValues.Pop();
+        }
+
+        public Expression PeekThis()
+        {
+            return _thisValues.Peek();
         }
 
         public System.Linq.Expressions.Expression CommonExpr()
@@ -656,10 +667,9 @@ namespace OpenApiQuery.Parsing
                     else
                     {
                         var member = BindMember(expression, identifier);
-                        return System.Linq.Expressions.Expression.MakeMemberAccess(expression, member);
+                        return Expression.MakeMemberAccess(expression, member);
                     }
 
-                    break;
                 case QueryExpressionTokenKind.OpenParenthesis:
                     return Parenthsis();
                 default:
