@@ -651,6 +651,7 @@ namespace OpenApiQuery.Parsing
                             ReportError("Missing close parenthesis after function call");
                             return null;
                         }
+                        NextToken();
 
                         return BindFunctionCall(identifier, arguments);
                     }
@@ -737,7 +738,7 @@ namespace OpenApiQuery.Parsing
                 throw new ParseException(e.Message, Position, e);
             }
         }
-        private static bool IsNumeric(QueryExpressionTokenKind currentQueryExpressionTokenKind)
+        public static bool IsNumeric(QueryExpressionTokenKind currentQueryExpressionTokenKind)
         {
             return currentQueryExpressionTokenKind switch
             {

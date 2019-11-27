@@ -24,7 +24,18 @@ namespace OpenApiQuery
 
         public IQueryable<T> ApplyTo<T>(IQueryable<T> queryable)
         {
-            bool isFirstClause = true;
+            var isFirstClause = true;
+            foreach (var clause in Clauses)
+            {
+                queryable = clause.ApplyTo(queryable, Parameter, isFirstClause);
+                isFirstClause = false;
+            }
+
+            return queryable;
+        }
+        public Expression ApplyTo(Expression queryable)
+        {
+            var isFirstClause = true;
             foreach (var clause in Clauses)
             {
                 queryable = clause.ApplyTo(queryable, Parameter, isFirstClause);
@@ -61,6 +72,18 @@ namespace OpenApiQuery
             }
         }
 
+        internal void Initialize(QueryExpressionParser expressionParser, ModelStateDictionary modelState)
+        {
+            var parser = new OrderByClauseParser(expressionParser, Clauses);
+            try
+            {
+                parser.Parse(Parameter);
+            }
+            catch (Exception e)
+            {
+                modelState.TryAddModelException("$orderby", e);
+            }
+        }
 
         private class OrderByClauseParser
         {
@@ -70,6 +93,11 @@ namespace OpenApiQuery
             public OrderByClauseParser(IOpenApiTypeHandler binder, string value, IList<OrderByClause> clauses)
             {
                 _parser = new QueryExpressionParser(value, binder);
+                _clauses = clauses;
+            }          
+            public OrderByClauseParser(QueryExpressionParser parser, IList<OrderByClause> clauses)
+            {
+                _parser = parser;
                 _clauses = clauses;
             }
 

@@ -34,6 +34,7 @@ namespace OpenApiQuery
                 RootSelectClause,
                 _expandClauses);
             queryable = queryable.Select((Expression<Func<T, T>>) selectClause);
+
             return queryable;
         }
 
@@ -73,7 +74,7 @@ namespace OpenApiQuery
                 var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                 foreach (var value in values)
                 {
-                    var parser = new ExpandClauseParser(binder, value, _expandClauses);
+                    var parser = new ExpandClauseParser(binder, value, _expandClauses, modelStateDictionary);
                     try
                     {
                         parser.Parse(_parameter);
@@ -194,12 +195,14 @@ namespace OpenApiQuery
         {
             private readonly QueryExpressionParser _parser;
             private readonly IDictionary<PropertyInfo, ExpandClause> _clauses;
+            private readonly ModelStateDictionary _modelStateDictionary;
 
             public ExpandClauseParser(IOpenApiTypeHandler binder, string value,
-                IDictionary<PropertyInfo, ExpandClause> clauses)
+                IDictionary<PropertyInfo, ExpandClause> clauses, ModelStateDictionary modelStateDictionary)
             {
                 _parser = new QueryExpressionParser(value, binder);
                 _clauses = clauses;
+                _modelStateDictionary = modelStateDictionary;
             }
 
             private ExpandClauseParser(QueryExpressionParser parser, IDictionary<PropertyInfo, ExpandClause> clauses)
@@ -268,11 +271,27 @@ namespace OpenApiQuery
                 {
                     var option = (string) _parser.TokenData;
 
-                    var handler = option switch
+                    Action<ExpandClause> handler;
+                    switch(option)
                     {
-                        "$filter" => (Action<ExpandClause>)ExpandFilter,
-                        "$expand" => NestedExpand,
-                        _ => null
+                        case "$filter":
+                            handler = ExpandFilter;
+                            break;
+                        case "$expand":
+                            handler = NestedExpand;
+                            break;
+                        case "$orderby":
+                            handler = ExpandOrder;
+                            break;
+                        case "$top":
+                            handler = ExpandTop;
+                            break;
+                        case "$skip":
+                            handler = ExpandSkip;
+                            break;
+                        default:
+                            handler = null;
+                            break;
                     };
 
                     if (handler != null)
@@ -312,16 +331,48 @@ namespace OpenApiQuery
             private void NestedExpand(ExpandClause clause)
             {
                 var nestedParser = new ExpandClauseParser(_parser, clause.NestedExpands);
-                clause.FilterParameter = Expression.Parameter(clause.ItemType);
-                nestedParser.Parse(clause.FilterParameter);
+                clause.NestedExpandParameter = Expression.Parameter(clause.ItemType);
+                nestedParser.Parse(clause.NestedExpandParameter);
             }
 
             private void ExpandFilter(ExpandClause clause)
             {
-                clause.FilterParameter = Expression.Parameter(clause.ItemType);
-                _parser.PushThis(clause.FilterParameter);
-                clause.Filter = _parser.CommonExpr();
-                _parser.PopThis();
+                clause.Filter = new FilterQueryOption(clause.ItemType);
+                clause.Filter.Initialize(_parser, _modelStateDictionary);
+            }
+
+            private void ExpandOrder(ExpandClause clause)
+            {
+                clause.Orderby = new OrderByQueryOption(clause.ItemType);
+                clause.Orderby.Initialize(_parser, _modelStateDictionary);
+            }
+
+            private void ExpandTop(ExpandClause clause)
+            {
+                if (!QueryExpressionParser.IsNumeric(_parser.CurrentTokenKind))
+                {
+                    _parser.ReportError(
+                        $"$expand($top) does not specify a numerical value at position {_parser.Position}");
+                }
+
+                clause.Top = new TopQueryOption();
+                clause.Top.Initialize(_parser.TokenData.ToString(), _modelStateDictionary);
+
+                _parser.NextToken();
+            }
+
+            private void ExpandSkip(ExpandClause clause)
+            {
+                if (!QueryExpressionParser.IsNumeric(_parser.CurrentTokenKind))
+                {
+                    _parser.ReportError(
+                        $"$expand($skip) does not specify a numerical value at position {_parser.Position}");
+                }
+
+                clause.Skip = new SkipQueryOption();
+                clause.Skip.Initialize(_parser.TokenData.ToString(), _modelStateDictionary);
+
+                _parser.NextToken();
             }
         }
 
