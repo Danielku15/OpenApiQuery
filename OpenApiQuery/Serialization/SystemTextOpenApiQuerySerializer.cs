@@ -1,56 +1,61 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using OpenApiQuery.Parsing;
 using OpenApiQuery.Utils;
 
 namespace OpenApiQuery.Serialization
 {
     public class SystemTextOpenApiQuerySerializer : IOpenApiQuerySerializer
     {
+        private IOpenApiTypeHandler _typeHandler;
         public JsonSerializerOptions SerializerOptions { get; }
 
-        public SystemTextOpenApiQuerySerializer(IOptions<JsonOptions> jsonOptions)
+        public SystemTextOpenApiQuerySerializer(IOptions<JsonOptions> jsonOptions, IOpenApiTypeHandler typeHandler)
         {
+            _typeHandler = typeHandler;
             SerializerOptions = jsonOptions.Value.JsonSerializerOptions;
         }
 
-        public async Task SerializeResultAsync<T>(Stream writeStream, OpenApiQueryResult queryResult,
-            OpenApiQueryApplyResult<T> appliedQueryResult,
+        public async Task SerializeResultAsync<T>(Stream writeStream, OpenApiSerializationContext<T> context,
             CancellationToken cancellationToken) where T : new()
         {
-            await using (var writer = new Utf8JsonWriter(writeStream, new JsonWriterOptions
+            await using var writer = new Utf8JsonWriter(writeStream, new JsonWriterOptions
             {
                 Encoder = SerializerOptions.Encoder,
                 Indented = SerializerOptions.WriteIndented,
                 SkipValidation = true
-            }))
+            });
+            writer.WriteStartObject();
+
+            if (context.ApplyResult.TotalCount != null)
             {
-                writer.WriteStartObject();
-
-                if (appliedQueryResult.TotalCount != null)
-                {
-                    writer.WriteNumber("totalCount", appliedQueryResult.TotalCount.Value);
-                }
-
-                writer.WritePropertyName("resultItems");
-
-                await WriteArrayAsync(writer, appliedQueryResult.ResultItems,
-                    typeof(T),
-                    queryResult.QueryOptions.SelectExpand.RootSelectClause, cancellationToken);
-
-                writer.WriteEndObject();
+                writer.WriteNumber("totalCount", context.ApplyResult.TotalCount.Value);
             }
+
+            writer.WritePropertyName("resultItems");
+
+            var itemType = _typeHandler.ResolveType(typeof(T));
+
+            await WriteArrayAsync(context, writer,
+                context.ApplyResult.ResultItems,
+                itemType,
+                context.QueryResult.QueryOptions.SelectExpand.RootSelectClause,
+                cancellationToken);
+
+            writer.WriteEndObject();
         }
 
-        private async Task WriteArrayAsync(Utf8JsonWriter writer, IEnumerable resultItems,
-            Type itemType,
+        private async Task WriteArrayAsync(
+            OpenApiSerializationContext context,
+            Utf8JsonWriter writer,
+            IEnumerable resultItems,
+            IOpenApiType itemType,
             SelectClause selectClause,
             CancellationToken cancellationToken)
         {
@@ -58,14 +63,19 @@ namespace OpenApiQuery.Serialization
 
             foreach (var item in resultItems)
             {
-                await WriteObjectAsync(writer, itemType, item, selectClause, cancellationToken);
+                await WriteObjectAsync(context, writer, itemType, item, selectClause, cancellationToken);
             }
 
             writer.WriteEndArray();
         }
 
-        private async Task WriteObjectAsync(Utf8JsonWriter writer, Type itemType, object item,
-            SelectClause selectClause, CancellationToken cancellationToken)
+        private async Task WriteObjectAsync(
+            OpenApiSerializationContext context,
+            Utf8JsonWriter writer,
+            IOpenApiType itemType,
+            object item,
+            SelectClause selectClause,
+            CancellationToken cancellationToken)
         {
             if (item == null)
             {
@@ -75,25 +85,27 @@ namespace OpenApiQuery.Serialization
             {
                 writer.WriteStartObject();
 
-                var actualType = item.GetType();
-                var needsType = itemType != actualType;
+                var actualType = _typeHandler.ResolveType(item.GetType());
+                var needsType = !itemType.Equals(actualType);
                 if (needsType)
                 {
-                    // TODO: ask injectable component for serialization type name. 
-                    writer.WriteString("@odata.type", actualType.FullName);
+                    writer.WriteString("@odata.type", itemType.JsonName);
                 }
 
-                // TODO: caching and allow manual filtering on top (e.g. attributes) 
-                foreach (var property in actualType.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                foreach (var property in itemType.Properties.Values)
                 {
                     SelectClause subClause = null;
                     if (selectClause == null ||
-                        selectClause.SelectClauses?.TryGetValue(property, out subClause) == true ||
+                        selectClause.SelectClauses?.TryGetValue(property.ClrProperty, out subClause) == true ||
                         selectClause.IsStarSelect)
                     {
-                        var jsonPropertyName = SerializerOptions.PropertyNamingPolicy.ConvertName(property.Name);
+                        var jsonPropertyName = property.JsonName;
                         writer.WritePropertyName(jsonPropertyName);
-                        await WriteValueAsync(writer, property.PropertyType, property.GetValue(item), subClause, cancellationToken);
+                        await WriteValueAsync(context,
+                            writer,
+                            _typeHandler.ResolveType(property.ValueType),
+                            property.GetValue(item), subClause,
+                            cancellationToken);
                     }
                 }
 
@@ -101,7 +113,12 @@ namespace OpenApiQuery.Serialization
             }
         }
 
-        private async Task WriteValueAsync(Utf8JsonWriter writer, Type itemType, object item, SelectClause subClause,
+        private async Task WriteValueAsync(
+            OpenApiSerializationContext context,
+            Utf8JsonWriter writer,
+            IOpenApiType itemType,
+            object item,
+            SelectClause subClause,
             CancellationToken cancellationToken)
         {
             // TODO: max levels detection
@@ -165,24 +182,24 @@ namespace OpenApiQuery.Serialization
                 case TimeSpan v:
                     writer.WriteStringValue(v.ToString("c"));
                     break;
-                case IDictionary v:
+                case IDictionary _:
                     // TODO dictionary
                     break;
                 case IEnumerable v:
                     var vt = v.GetType();
                     if (ReflectionHelper.ImplementsEnumerable(vt, out var enumerableItemType))
                     {
-                        await WriteArrayAsync(writer, v, enumerableItemType, subClause, cancellationToken);
+                        await WriteArrayAsync(context, writer, v, _typeHandler.ResolveType(enumerableItemType), subClause, cancellationToken);
                     }
                     else
                     {
-                        await WriteArrayAsync(writer, v, typeof(object), subClause, cancellationToken);
+                        await WriteArrayAsync(context, writer, v, _typeHandler.ResolveType(typeof(object)), subClause, cancellationToken);
                     }
+
                     break;
                 // sub-objects
                 default:
-                    // TODO: cyclic reference detection
-                    await WriteObjectAsync(writer, itemType, item, subClause, cancellationToken);
+                    await WriteObjectAsync(context, writer, itemType, item, subClause, cancellationToken);
                     break;
             }
         }

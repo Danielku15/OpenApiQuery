@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Microsoft.AspNetCore.Http;
 
 namespace OpenApiQuery.Serialization

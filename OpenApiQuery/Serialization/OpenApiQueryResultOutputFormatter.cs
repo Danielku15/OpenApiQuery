@@ -1,74 +1,16 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
-using OpenApiQuery.Serialization;
+using OpenApiQuery.Utils;
 
-namespace OpenApiQuery
+namespace OpenApiQuery.Serialization
 {
     public class OpenApiQueryResultOutputFormatter : TextOutputFormatter
     {
-        private static readonly MethodInfo WriteResponseBodyAsyncInfo =
-            typeof(OpenApiQueryResultOutputFormatter).GetMethod(nameof(WriteResponseBodyAsync),
-                BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static readonly ConcurrentDictionary<Type,
-                Func<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>>
-            WriteResponseBodyAsyncCache =
-                new ConcurrentDictionary<Type,
-                    Func<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>>();
-
-        private static Task WriteResponseBodyAsyncOfT(
-            OpenApiQueryResultOutputFormatter formatter,
-            OutputFormatterWriteContext context,
-            Type elementType,
-            Encoding selectedEncoding)
-        {
-            if (!WriteResponseBodyAsyncCache.TryGetValue(elementType, out var taskFactory))
-            {
-                WriteResponseBodyAsyncCache[elementType] = taskFactory = BuildWriteResponseBodyAsync(elementType);
-            }
-
-            return taskFactory(formatter, context, selectedEncoding);
-        }
-
-        private static Func<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>
-            BuildWriteResponseBodyAsync(Type elementType)
-        {
-            // We generate a lambda which calls the generic method with the correct type as generic
-            //  Task WriteResponseBodyAsyncCacheOfT(OpenApiQueryResultOutputFormatter formatter,
-            //         OutputFormatterWriteContext context,
-            //         Type elementType,
-            //         Encoding encoding)
-            //  {
-            //      return formatter.WriteResponseBodyAsync<elementType>(context, encoding);
-            //  }
-
-            var formatterParameter = Expression.Parameter(typeof(OpenApiQueryResultOutputFormatter), "formatter");
-            var contextParameter = Expression.Parameter(typeof(OutputFormatterWriteContext), "context");
-            var encodingParameter = Expression.Parameter(typeof(Encoding), "encoding");
-
-            var methodToCall = WriteResponseBodyAsyncInfo.MakeGenericMethod(elementType);
-            var body = Expression.Call(
-                formatterParameter,
-                methodToCall,
-                contextParameter,
-                encodingParameter
-            );
-
-            return Expression
-                .Lambda<Func<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>>(
-                    body,
-                    formatterParameter, contextParameter, encodingParameter
-                ).Compile();
-        }
-
         private static readonly MediaTypeHeaderValue ApplicationJson
             = MediaTypeHeaderValue.Parse("application/json").CopyAsReadOnly();
 
@@ -98,8 +40,14 @@ namespace OpenApiQuery
             Encoding selectedEncoding)
         {
             var result = (OpenApiQueryResult) context.Object;
-            return WriteResponseBodyAsyncOfT(this, context, result.QueryOptions.ElementType, selectedEncoding);
+            return WriteResponseBodyAsyncOfT.Invoke(this, context, selectedEncoding,
+                result.QueryOptions.ElementType);
         }
+
+        private static readonly GenericMethodCallHelper<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>
+            WriteResponseBodyAsyncOfT =  new GenericMethodCallHelper<OpenApiQueryResultOutputFormatter, OutputFormatterWriteContext, Encoding, Task>(
+                x => x.WriteResponseBodyAsync<object>(null, null)
+            );
 
         private async Task WriteResponseBodyAsync<T>(OutputFormatterWriteContext context,
             Encoding selectedEncoding)
@@ -124,7 +72,9 @@ namespace OpenApiQuery
 
             var serializerProvider = httpContext.RequestServices.GetRequiredService<IOpenApiQuerySerializerProvider>();
             var serializer = serializerProvider.GetSerializerForResult(httpContext, result, appliedQueryResult);
-            await serializer.SerializeResultAsync(writeStream, result, appliedQueryResult, httpContext.RequestAborted);
+
+            var serializationContext = new OpenApiSerializationContext<T>(result, appliedQueryResult);
+            await serializer.SerializeResultAsync(writeStream, serializationContext, httpContext.RequestAborted);
 
             await writeStream.FlushAsync(httpContext.RequestAborted);
         }

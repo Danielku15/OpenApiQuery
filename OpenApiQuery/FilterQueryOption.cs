@@ -42,7 +42,7 @@ namespace OpenApiQuery
                 if (values.Count == 1)
                 {
                     RawValue = values[0];
-                    var binder = httpContext.RequestServices.GetRequiredService<IOpenApiQueryExpressionBinder>();
+                    var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                     var parser = new QueryExpressionParser(values[0], binder);
                     try
                     {

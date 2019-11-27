@@ -12,10 +12,10 @@ namespace OpenApiQuery.Parsing
         private const char Eof = '\0';
 
         private readonly string _value;
-        private readonly IOpenApiQueryExpressionBinder _binder;
+        private readonly IOpenApiTypeHandler _binder;
 
         private char _currentCharacter;
-        private Stack<System.Linq.Expressions.Expression> _thisValues = new Stack<System.Linq.Expressions.Expression>();
+        private Stack<Expression> _thisValues = new Stack<Expression>();
 
         public QueryExpressionTokenKind CurrentTokenKind { get; private set; }
 
@@ -23,7 +23,7 @@ namespace OpenApiQuery.Parsing
 
         public int Position { get; private set; } = -1;
 
-        public QueryExpressionParser(string raw, IOpenApiQueryExpressionBinder binder)
+        public QueryExpressionParser(string raw, IOpenApiTypeHandler binder)
         {
             _value = raw;
             _binder = binder;
@@ -277,38 +277,38 @@ namespace OpenApiQuery.Parsing
             return _thisValues.Peek();
         }
 
-        public System.Linq.Expressions.Expression CommonExpr()
+        public Expression CommonExpr()
         {
             return LogicalOr();
         }
 
-        private System.Linq.Expressions.Expression LogicalOr()
+        private Expression LogicalOr()
         {
             var left = LogicalAnd();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword && "or".Equals(TokenData))
             {
                 NextToken();
                 var right = LogicalAnd();
-                left = System.Linq.Expressions.Expression.Or(left, right);
+                left = Expression.Or(left, right);
             }
 
             return left;
         }
 
-        private System.Linq.Expressions.Expression LogicalAnd()
+        private Expression LogicalAnd()
         {
             var left = Comparison();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword && "and".Equals(TokenData))
             {
                 NextToken();
                 var right = Comparison();
-                left = System.Linq.Expressions.Expression.And(left, right);
+                left = Expression.And(left, right);
             }
 
             return left;
         }
 
-        private System.Linq.Expressions.Expression Comparison()
+        private Expression Comparison()
         {
             var left = Additive();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
@@ -338,14 +338,14 @@ namespace OpenApiQuery.Parsing
                         break;
                     case "has":
                         NextToken();
-                        var flag = System.Linq.Expressions.Expression.Convert(Additive(), typeof(Enum));
-                        left = System.Linq.Expressions.Expression.Call(null, HasFlagMethodInfo, left, flag);
+                        var flag = Expression.Convert(Additive(), typeof(Enum));
+                        left = Expression.Call(null, HasFlagMethodInfo, left, flag);
                         return left;
                     case "in":
                         NextToken();
                         var collection = List(left.Type) ?? CommonExpr();
                         // TODO: cache
-                        left = System.Linq.Expressions.Expression.Call(null, ContainsMethodInfo.MakeGenericMethod(left.Type), collection, left);
+                        left = Expression.Call(null, ContainsMethodInfo.MakeGenericMethod(left.Type), collection, left);
                         return left;
                 }
 
@@ -356,13 +356,13 @@ namespace OpenApiQuery.Parsing
 
                 NextToken();
                 var right = Additive();
-                left = System.Linq.Expressions.Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
+                left = Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
             }
 
             return left;
         }
 
-        private System.Linq.Expressions.Expression List(Type itemType)
+        private Expression List(Type itemType)
         {
             if (CurrentTokenKind != QueryExpressionTokenKind.OpenBracket)
             {
@@ -371,7 +371,7 @@ namespace OpenApiQuery.Parsing
 
             NextToken();
 
-            var expressions = new List<System.Linq.Expressions.Expression>();
+            var expressions = new List<Expression>();
 
             var expr = CommonExpr();
             expressions.Add(expr);
@@ -392,7 +392,7 @@ namespace OpenApiQuery.Parsing
             NextToken();
 
 
-            return System.Linq.Expressions.Expression.NewArrayInit(itemType, expressions.Select(e => Promote(e, itemType)));
+            return Expression.NewArrayInit(itemType, expressions.Select(e => Promote(e, itemType)));
         }
 
         private static readonly MethodInfo HasFlagMethodInfo =
@@ -403,29 +403,25 @@ namespace OpenApiQuery.Parsing
                 .Single(m => m.Name == nameof(Enumerable.Contains) && m.GetParameters().Length == 2);
 
 
-        private System.Linq.Expressions.Expression Additive()
+        private Expression Additive()
         {
             var left = Multiplicative();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
             {
                 var op = (string) TokenData;
 
-                ExpressionType? expression = null;
-                switch (op.ToLowerInvariant())
+                ExpressionType? expression = op.ToLowerInvariant() switch
                 {
-                    case "add":
-                        expression = ExpressionType.Add;
-                        break;
-                    case "sub":
-                        expression = ExpressionType.Subtract;
-                        break;
-                }
+                    "add" => ExpressionType.Add,
+                    "sub" => ExpressionType.Subtract,
+                    _ => null
+                };
 
                 if (expression != null)
                 {
                     NextToken();
                     var right = Multiplicative();
-                    left = System.Linq.Expressions.Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
+                    left = Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
                 }
                 else
                 {
@@ -436,32 +432,26 @@ namespace OpenApiQuery.Parsing
             return left;
         }
 
-        private System.Linq.Expressions.Expression Multiplicative()
+        private Expression Multiplicative()
         {
             var left = Unary();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
             {
                 var op = (string) TokenData;
 
-                ExpressionType? expression = null;
-                switch (op.ToLowerInvariant())
+                ExpressionType? expression = op.ToLowerInvariant() switch
                 {
-                    case "mul":
-                        expression = ExpressionType.Multiply;
-                        break;
-                    case "div":
-                        expression = ExpressionType.Divide;
-                        break;
-                    case "mod":
-                        expression = ExpressionType.Modulo;
-                        break;
-                }
+                    "mul" => ExpressionType.Multiply,
+                    "div" => ExpressionType.Divide,
+                    "mod" => ExpressionType.Modulo,
+                    _ => null
+                };
 
                 if (expression != null)
                 {
                     NextToken();
                     var right = Unary();
-                    left = System.Linq.Expressions.Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
+                    left = Expression.MakeBinary(expression.Value, Promote(left, right), Promote(right, left));
                 }
                 else
                 {
@@ -472,12 +462,12 @@ namespace OpenApiQuery.Parsing
             return left;
         }
 
-        private System.Linq.Expressions.Expression Promote(System.Linq.Expressions.Expression toPromote, System.Linq.Expressions.Expression other)
+        private static Expression Promote(Expression toPromote, Expression other)
         {
             return Promote(toPromote, other.Type);
         }
 
-        private System.Linq.Expressions.Expression Promote(System.Linq.Expressions.Expression toPromote, Type otherType)
+        private static Expression Promote(Expression toPromote, Type otherType)
         {
             // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions#implicit-numeric-conversions
             if (toPromote.Type == typeof(sbyte))
@@ -489,7 +479,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -505,7 +495,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -517,7 +507,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -531,7 +521,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -542,7 +532,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -554,7 +544,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -564,7 +554,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -574,7 +564,7 @@ namespace OpenApiQuery.Parsing
                     otherType == typeof(double) ||
                     otherType == typeof(decimal))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
@@ -582,40 +572,40 @@ namespace OpenApiQuery.Parsing
             {
                 if (otherType == typeof(double))
                 {
-                    return System.Linq.Expressions.Expression.Convert(toPromote, otherType);
+                    return Expression.Convert(toPromote, otherType);
                 }
             }
 
             return toPromote;
         }
 
-        private System.Linq.Expressions.Expression Unary()
+        private Expression Unary()
         {
-            if (CurrentTokenKind == QueryExpressionTokenKind.Keyword && (string) TokenData == "not")
+            switch (CurrentTokenKind)
             {
-                NextToken();
-                var unary = Unary();
-                return System.Linq.Expressions.Expression.Not(unary);
-            }
-
-            if (CurrentTokenKind == QueryExpressionTokenKind.Minus)
-            {
-                NextToken();
-                if (IsNumeric(CurrentTokenKind))
+                case QueryExpressionTokenKind.Keyword when (string) TokenData == "not":
                 {
-                    return Primary();
-                }
-                else
-                {
+                    NextToken();
                     var unary = Unary();
-                    return System.Linq.Expressions.Expression.Negate(unary);
+                    return Expression.Not(unary);
                 }
-            }
+                case QueryExpressionTokenKind.Minus:
+                {
+                    NextToken();
+                    if (IsNumeric(CurrentTokenKind))
+                    {
+                        return Primary();
+                    }
 
-            return Primary();
+                    var unary = Unary();
+                    return Expression.Negate(unary);
+                }
+                default:
+                    return Primary();
+            }
         }
 
-        private System.Linq.Expressions.Expression Primary()
+        private Expression Primary()
         {
             var expression = Segment(_thisValues.Peek());
             while (CurrentTokenKind == QueryExpressionTokenKind.Slash)
@@ -627,7 +617,7 @@ namespace OpenApiQuery.Parsing
             return expression;
         }
 
-        private System.Linq.Expressions.Expression Segment(System.Linq.Expressions.Expression expression)
+        private Expression Segment(Expression expression)
         {
             switch (CurrentTokenKind)
             {
@@ -639,8 +629,8 @@ namespace OpenApiQuery.Parsing
                     if (CurrentTokenKind == QueryExpressionTokenKind.OpenParenthesis)
                     {
                         NextToken();
-                        
-                        var arguments = new List<System.Linq.Expressions.Expression>();
+
+                        var arguments = new List<Expression>();
 
                         while (CurrentTokenKind != QueryExpressionTokenKind.CloseParenthesis)
                         {
@@ -678,7 +668,7 @@ namespace OpenApiQuery.Parsing
         }
 
 
-        private System.Linq.Expressions.Expression Literal()
+        private Expression Literal()
         {
             switch (CurrentTokenKind)
             {
@@ -692,17 +682,17 @@ namespace OpenApiQuery.Parsing
                 case QueryExpressionTokenKind.GuidLiteral:
                     var data = TokenData;
                     NextToken();
-                    return System.Linq.Expressions.Expression.Constant(data, data.GetType());
+                    return Expression.Constant(data, data.GetType());
                 case QueryExpressionTokenKind.NullLiteral:
                     NextToken();
-                    return System.Linq.Expressions.Expression.Constant(null);
+                    return Expression.Constant(null);
                 default:
                     ReportError($"Unexpected expression at position {Position}");
                     return null;
             }
         }
 
-        private System.Linq.Expressions.Expression Parenthsis()
+        private Expression Parenthsis()
         {
             NextToken();
             var result = CommonExpr();
@@ -722,7 +712,7 @@ namespace OpenApiQuery.Parsing
             return BindMember(_thisValues.Peek(), tokenData);
         }
 
-        public MemberInfo BindMember(System.Linq.Expressions.Expression expression, string tokenData)
+        public MemberInfo BindMember(Expression expression, string tokenData)
         {
             try
             {
@@ -734,9 +724,9 @@ namespace OpenApiQuery.Parsing
             }
         }
 
-        
-        
-        private System.Linq.Expressions.Expression BindFunctionCall(string identifier, List<System.Linq.Expressions.Expression> arguments)
+
+
+        private Expression BindFunctionCall(string identifier, List<Expression> arguments)
         {
             try
             {
@@ -745,20 +735,18 @@ namespace OpenApiQuery.Parsing
             catch (BindException e)
             {
                 throw new ParseException(e.Message, Position, e);
-            }        
-        }
-        private bool IsNumeric(QueryExpressionTokenKind currentQueryExpressionTokenKind)
-        {
-            switch (currentQueryExpressionTokenKind)
-            {
-                case QueryExpressionTokenKind.DoubleLiteral:
-                case QueryExpressionTokenKind.SingleLiteral:
-                case QueryExpressionTokenKind.LongLiteral:
-                case QueryExpressionTokenKind.IntegerLiteral:
-                    return true;
             }
-
-            return false;
+        }
+        private static bool IsNumeric(QueryExpressionTokenKind currentQueryExpressionTokenKind)
+        {
+            return currentQueryExpressionTokenKind switch
+            {
+                QueryExpressionTokenKind.DoubleLiteral => true,
+                QueryExpressionTokenKind.SingleLiteral => true,
+                QueryExpressionTokenKind.LongLiteral => true,
+                QueryExpressionTokenKind.IntegerLiteral => true,
+                _ => false
+            };
         }
     }
 }

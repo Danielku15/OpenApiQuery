@@ -19,6 +19,7 @@ namespace OpenApiQuery.Utils
             return method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
         }
 
+
         public static bool ImplementsEnumerable(Type type, out Type itemType)
         {
             // 1:many
@@ -33,7 +34,7 @@ namespace OpenApiQuery.Utils
             itemType = null;
             return false;
         }
-        
+
         public static bool IsEnumerable(Type type, out Type itemType)
         {
             // 1:many

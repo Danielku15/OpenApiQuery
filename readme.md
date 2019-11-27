@@ -12,10 +12,11 @@ The ultimate goal is to support a full OData alike experience with using an Open
 
 | Feature             | Description                                                                   | Status            |
 | ----------------    | ----------------------------------------------------------------------------- | ----------------- |
-| `$select`           | Limit the returned properties                                                 | Not yet supported |
+| `$select`           | Limit the returned properties                                                 | Supported         |
 | `$filter`           | Filter result entities                                                        | Supported         |
 | `$expand`           | Include related navigation properties                                         | Supported         |
-| `$expand($filter)`  | Filter related navigation properties which are included                       | Not yet supported |
+| `$expand($filter)`  | Filter related navigation properties which are included                       | Supported         |
+| `$expand($expand)`  | Filter related navigation properties which are included                       | Supported         |
 | `$expand($orderby)` | Apply ordering to the expanded navigation properties                          | Not yet supported |
 | `$expand($skip)`    | Apply paging to the expanded navigation properties                            | Not yet supported |
 | `$expand($top)`     | Apply paging to the expanded navigation properties                            | Not yet supported |

@@ -48,7 +48,7 @@ namespace OpenApiQuery
         {
             if (httpContext.Request.Query.TryGetValue("$select", out var values))
             {
-                var binder = httpContext.RequestServices.GetRequiredService<IOpenApiQueryExpressionBinder>();
+                var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                 foreach (var value in values)
                 {
                     var parser = new SelectClauseParser(binder, value);
@@ -70,7 +70,7 @@ namespace OpenApiQuery
         {
             if (httpContext.Request.Query.TryGetValue("$expand", out var values))
             {
-                var binder = httpContext.RequestServices.GetRequiredService<IOpenApiQueryExpressionBinder>();
+                var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                 foreach (var value in values)
                 {
                     var parser = new ExpandClauseParser(binder, value, _expandClauses);
@@ -92,7 +92,7 @@ namespace OpenApiQuery
         {
             private readonly QueryExpressionParser _parser;
 
-            public SelectClauseParser(IOpenApiQueryExpressionBinder binder, string value)
+            public SelectClauseParser(IOpenApiTypeHandler binder, string value)
             {
                 _parser = new QueryExpressionParser(value, binder);
             }
@@ -128,55 +128,63 @@ namespace OpenApiQuery
 
             private void SelectItem(SelectClause currentClause)
             {
-                if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Star)
+                switch (_parser.CurrentTokenKind)
                 {
-                    _parser.NextToken();
-                    currentClause.IsStarSelect = true;
-                }
-                else if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Identifier)
-                {
-                    var member = _parser.BindMember((string) _parser.TokenData) as PropertyInfo;
-                    if (member == null)
+                    case QueryExpressionTokenKind.Star:
+                        _parser.NextToken();
+                        currentClause.IsStarSelect = true;
+                        break;
+                    case QueryExpressionTokenKind.Identifier:
                     {
-                        _parser.ReportError($"'{_parser.TokenData}' is not a valid property for selection");
-                        return;
-                    }
+                        var member = _parser.BindMember((string) _parser.TokenData) as PropertyInfo;
+                        if (member == null)
+                        {
+                            _parser.ReportError($"'{_parser.TokenData}' is not a valid property for selection");
+                            return;
+                        }
 
-                    _parser.NextToken();
-
-
-                    // not yet selected -> create subclause
-                    if (!currentClause.SelectClauses.TryGetValue(member, out var subClause))
-                    {
-                        subClause = new SelectClause();
-                        subClause.SelectedMember = member;
-                        currentClause.SelectClauses[member] = subClause;
-                    }
-
-
-                    // nested expression
-                    if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Slash)
-                    {
                         _parser.NextToken();
 
-                        // activate sub clauses
-                        subClause.SelectClauses = new Dictionary<PropertyInfo, SelectClause>();
-                        // parse next segment into this subclause
-                        if (IsNavigationProperty(member, out var expressionType, out _))
+
+                        // not yet selected -> create subclause
+                        if (!currentClause.SelectClauses.TryGetValue(member, out var subClause))
                         {
-                            _parser.PushThis(Expression.Parameter(expressionType));
-                            SelectItem(subClause);
-                            _parser.PopThis();    
+                            subClause = new SelectClause();
+                            subClause.SelectedMember = member;
+                            currentClause.SelectClauses[member] = subClause;
+                        }
+
+
+                        // nested expression
+                        if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Slash)
+                        {
+                            _parser.NextToken();
+
+                            // activate sub clauses
+                            subClause.SelectClauses = new Dictionary<PropertyInfo, SelectClause>();
+                            // parse next segment into this subclause
+                            if (IsNavigationProperty(member, out var expressionType, out _))
+                            {
+                                _parser.PushThis(Expression.Parameter(expressionType));
+                                SelectItem(subClause);
+                                _parser.PopThis();
+                            }
+                            else if(member.DeclaringType != null)
+                            {
+                                _parser.ReportError($"'{member.DeclaringType.FullName}.{member.Name}' is no navigation property, cannot expand with slash");
+                            }
+                            else
+                            {
+                                _parser.ReportError($"'{member.Name}' is no navigation property, cannot expand with slash");
+                            }
                         }
                         else
                         {
-                            _parser.ReportError($"'{member.DeclaringType.FullName}.{member.Name}' is no navigation property, cannot expand with slash");
+                            // $select=complexProperty/subproperty is equal to $select=complexProperty/subproperty/*
+                            subClause.IsStarSelect = true;
                         }
-                    }
-                    else
-                    {
-                        // $select=complexProperty/subproperty is equal to $select=complexProperty/subproperty/*
-                        subClause.IsStarSelect = true;
+
+                        break;
                     }
                 }
             }
@@ -187,7 +195,7 @@ namespace OpenApiQuery
             private readonly QueryExpressionParser _parser;
             private readonly IDictionary<PropertyInfo, ExpandClause> _clauses;
 
-            public ExpandClauseParser(IOpenApiQueryExpressionBinder binder, string value,
+            public ExpandClauseParser(IOpenApiTypeHandler binder, string value,
                 IDictionary<PropertyInfo, ExpandClause> clauses)
             {
                 _parser = new QueryExpressionParser(value, binder);
@@ -260,17 +268,12 @@ namespace OpenApiQuery
                 {
                     var option = (string) _parser.TokenData;
 
-                    Action<ExpandClause> handler = null;
-                    switch (option)
+                    var handler = option switch
                     {
-                        case "$filter":
-                            handler = ExpandFilter;
-                            break;
-                        case "$expand":
-                            handler = NestedExpand;
-                            break;
-                        // TODO: support also $orderby, $skip, $top here? might need some refactoring to generalize the parameter parsing
-                    }
+                        "$filter" => (Action<ExpandClause>)ExpandFilter,
+                        "$expand" => NestedExpand,
+                        _ => null
+                    };
 
                     if (handler != null)
                     {

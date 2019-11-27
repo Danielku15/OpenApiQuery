@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 namespace OpenApiQuery
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    sealed class OpenApiQueryParameterBindingAttribute : ModelBinderAttribute
+    internal sealed class OpenApiQueryParameterBindingAttribute : ModelBinderAttribute
     {
         public OpenApiQueryParameterBindingAttribute()
             : base(typeof(OpenApiQueryParameterBinding))
         {
         }
 
-        class OpenApiQueryParameterBinding : IModelBinder
+        private class OpenApiQueryParameterBinding : IModelBinder
         {
             public Task BindModelAsync(ModelBindingContext bindingContext)
             {
@@ -44,7 +44,7 @@ namespace OpenApiQuery
                 return Task.CompletedTask;
             }
 
-            private bool IsQueryOptions(Type bindingContextModelType)
+            private static bool IsQueryOptions(Type bindingContextModelType)
             {
                 return bindingContextModelType.IsGenericType &&
                        bindingContextModelType.GetGenericTypeDefinition() == typeof(OpenApiQueryOptions<>);
