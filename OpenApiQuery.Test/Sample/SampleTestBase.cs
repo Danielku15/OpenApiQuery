@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Update.Internal;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using OpenApiQuery.Sample;
 using OpenApiQuery.Sample.Data;
 using OpenApiQuery.Sample.Models;
@@ -14,7 +12,7 @@ namespace OpenApiQuery.Test.Sample
 {
     public class SampleTestBase
     {
-        protected TestServer SetupSample(
+        protected static TestServer SetupSample(
             IEnumerable<User> testdata = null,
             Action<WebHostBuilder> setup = null
         )

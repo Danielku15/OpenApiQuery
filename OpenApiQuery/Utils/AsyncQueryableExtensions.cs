@@ -2,11 +2,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenApiQuery
+namespace OpenApiQuery.Utils
 {
     internal static class AsyncQueryableExtensions
     {
-        // TODO: how to do this without referencing Entity Framework? 
+        // TODO: how to do this without referencing Entity Framework?
         public static Task<T[]> ToArrayAsync<T>(this IQueryable<T> queryable, CancellationToken cancellationToken)
         {
             return Task.FromResult(queryable.ToArray());

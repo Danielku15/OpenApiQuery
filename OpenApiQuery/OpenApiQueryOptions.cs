@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
     public abstract class OpenApiQueryOptions
     {
-        public SelectQueryOption Select { get; }
-        public ExpandQueryOption Expand { get; }
+        public SelectExpandQueryOption SelectExpand { get; }
 
         public FilterQueryOption Filter { get; }
 
@@ -32,8 +32,7 @@ namespace OpenApiQuery
         public OpenApiQueryOptions(Type elementType)
         {
             ElementType = elementType;
-            Select = new SelectQueryOption(this);
-            Expand = new ExpandQueryOption(ElementType);
+            SelectExpand = new SelectExpandQueryOption(ElementType);
             Filter = new FilterQueryOption(ElementType);
             OrderBy = new OrderByQueryOption(ElementType);
             Skip = new SkipQueryOption();
@@ -48,7 +47,7 @@ namespace OpenApiQuery
             // The order of applying the items to the queryable is important
 
             // 1. include all related items for further query options
-            queryable = Expand.ApplyTo(queryable);
+            queryable = SelectExpand.ApplyTo(queryable);
             // 2. sort to have the correct order for filtering and limiting
             queryable = OrderBy.ApplyTo(queryable);
             // 3. filter the items according to the user input
@@ -74,8 +73,7 @@ namespace OpenApiQuery
             HttpContext = httpContext;
             ModelState = modelState;
             var logger = httpContext.RequestServices.GetRequiredService<ILogger<OpenApiQueryOptions>>();
-            Select.Initialize(httpContext, logger);
-            Expand.Initialize(httpContext, logger, ModelState);
+            SelectExpand.Initialize(httpContext, logger, ModelState);
             Filter.Initialize(httpContext, logger, ModelState);
             OrderBy.Initialize(httpContext, logger, ModelState);
             Skip.Initialize(httpContext, ModelState);

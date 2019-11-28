@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace OpenApiQuery.Test
 {
@@ -17,9 +18,18 @@ namespace OpenApiQuery.Test
             response.EnsureSuccessStatusCode();
 
             await using var json = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<OpenApiQueryApplyResult<T>>(json,
-                Options.JsonSerializerOptions,
-                cancellationToken);
+            try
+            {
+                return await JsonSerializer.DeserializeAsync<OpenApiQueryApplyResult<T>>(json,
+                    Options.JsonSerializerOptions,
+                    cancellationToken);
+            }
+            catch (JsonException e)
+            {
+                var jsonText = await response.Content.ReadAsStringAsync();
+                Assert.Fail($"Failed to deserialize JSON: '{jsonText}', {e}");
+                throw;
+            }
         }
     }
 }
