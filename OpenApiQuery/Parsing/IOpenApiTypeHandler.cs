@@ -8,7 +8,7 @@ namespace OpenApiQuery.Parsing
     {
         IOpenApiType ResolveType(Type clrType);
 
-        MemberInfo BindMember(System.Linq.Expressions.Expression instance, string memberName);
+        PropertyInfo BindProperty(System.Linq.Expressions.Expression instance, string memberName);
 
         System.Linq.Expressions.Expression BindFunctionCall(string identifier,
             List<System.Linq.Expressions.Expression> arguments);

@@ -11,7 +11,7 @@ namespace OpenApiQuery.Parsing
 {
     public class DefaultOpenApiTypeHandler : IOpenApiTypeHandler
     {
-        private ConcurrentDictionary<Type, IOpenApiType> _typeCache = new ConcurrentDictionary<Type, IOpenApiType>();
+        private readonly ConcurrentDictionary<Type, IOpenApiType> _typeCache = new ConcurrentDictionary<Type, IOpenApiType>();
 
         public IOpenApiType ResolveType(Type clrType)
         {
@@ -60,17 +60,21 @@ namespace OpenApiQuery.Parsing
             return propertyInfo.CanWrite && propertyInfo.GetCustomAttribute(typeof(JsonIgnoreAttribute)) == null;
         }
 
-        public MemberInfo BindMember(Expression instance, string memberName)
+        public PropertyInfo BindProperty(Expression instance, string memberName)
         {
             var type = instance.Type;
-            var member = type.GetMembers(BindingFlags.Instance | BindingFlags.Public).SingleOrDefault(m =>
-                memberName.Equals(m.Name, StringComparison.InvariantCultureIgnoreCase));
-            if (member == null)
+            var apiType = ResolveType(type);
+            if (apiType == null)
+            {
+                throw new BindException($"Could not find API type definition for '{type.Name}'");
+            }
+
+            if (!apiType.TryGetProperty(memberName, out var property))
             {
                 throw new BindException($"Could not find member '{memberName}' on type '{type.Name}'");
             }
 
-            return member;
+            return property.ClrProperty;
         }
 
         private static readonly MethodInfo StringConcat =

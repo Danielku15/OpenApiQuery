@@ -29,7 +29,7 @@ namespace OpenApiQuery.Parsing
             return _get(instance);
         }
 
-        public void SetProperty(object instance, object value)
+        public void SetValue(object instance, object value)
         {
             _set(instance, value);
         }

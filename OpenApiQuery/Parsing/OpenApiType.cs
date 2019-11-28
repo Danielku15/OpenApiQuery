@@ -18,7 +18,7 @@ namespace OpenApiQuery.Parsing
         {
             ClrType = clrType;
             JsonName = jsonName;
-            Properties = new Dictionary<string, IOpenApiTypeProperty>();
+            Properties = new Dictionary<string, IOpenApiTypeProperty>(StringComparer.InvariantCultureIgnoreCase);
         }
 
         public bool Equals(IOpenApiType other)

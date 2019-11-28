@@ -213,9 +213,9 @@ namespace OpenApiQuery.Serialization.SystemText
 
                 if (itemType.TryGetProperty(propertyName, out var property))
                 {
-                    var propertyType = _typeHandler.ResolveType(property.ValueType);
-                    var value = ReadValue(ref reader, propertyType, property.ValueType, options);
-                    property.SetProperty(instance, value);
+                    var propertyType = _typeHandler.ResolveType(property.ClrProperty.PropertyType);
+                    var value = ReadValue(ref reader, propertyType, property.ClrProperty.PropertyType, options);
+                    property.SetValue(instance, value);
                 }
                 else
                 {
@@ -340,7 +340,7 @@ namespace OpenApiQuery.Serialization.SystemText
                         var jsonPropertyName = property.JsonName;
                         writer.WritePropertyName(jsonPropertyName);
                         WriteValue(writer,
-                            _typeHandler.ResolveType(property.ValueType),
+                            _typeHandler.ResolveType(property.ClrProperty.PropertyType),
                             property.GetValue(item),
                             subClause,
                             options);
