@@ -27,7 +27,6 @@ namespace OpenApiQuery
         }
 
         public IQueryable<T> ApplyTo<T>(IQueryable<T> queryable)
-            where T : new()
         {
             var selectClause = ExpandClause.BuildSelectLambdaExpression(
                 _parameter.Type,

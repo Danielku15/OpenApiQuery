@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OpenApiQuery.Sample.Data;
 using OpenApiQuery.Sample.Models;
@@ -16,9 +18,9 @@ namespace OpenApiQuery.Sample.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAsync(OpenApiQueryOptions<BlogPost> queryOptions)
+        public async Task<IActionResult> GetAsync(OpenApiQueryOptions<BlogPost> queryOptions, CancellationToken cancellationToken)
         {
-            return Ok(queryOptions.ApplyTo(_context.BlogPosts));
+            return Ok(await queryOptions.ApplyToAsync(_context.BlogPosts, cancellationToken));
         }
     }
 }

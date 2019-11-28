@@ -10,12 +10,12 @@ namespace OpenApiQuery.Utils
     {
         public static MemberInfo GetMember<T, TRet>(Expression<Func<T, TRet>> expr)
         {
-            return ((MemberExpression) expr.Body).Member;
+            return ((MemberExpression)expr.Body).Member;
         }
 
         public static MethodInfo GetMethod<T, TRet>(Expression<Func<T, TRet>> expr)
         {
-            var method = ((MethodCallExpression) expr.Body).Method;
+            var method = ((MethodCallExpression)expr.Body).Method;
             return method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
         }
 
@@ -47,6 +47,22 @@ namespace OpenApiQuery.Utils
             }
 
             itemType = null;
+            return false;
+        }
+
+        public static bool ImplementsDictionary(Type type, out Type keyType, out Type valueType)
+        {
+            if (type.IsGenericType &&
+                typeof(IDictionary<,>).MakeGenericType(type.GetGenericArguments()[0], type.GetGenericArguments()[1])
+                    .IsAssignableFrom(type))
+            {
+                keyType = type.GetGenericArguments()[0];
+                valueType = type.GetGenericArguments()[1];
+                return true;
+            }
+
+            keyType = null;
+            valueType = null;
             return false;
         }
     }

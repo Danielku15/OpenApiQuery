@@ -28,7 +28,7 @@ namespace OpenApiQuery.Parsing
             var apiType = new OpenApiType(clrType, clrType.Name);
             if (clrType.Assembly == typeof(object).Assembly)
             {
-                return apiType;
+                return null;
             }
 
             var properties = clrType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
