@@ -13,10 +13,15 @@ namespace OpenApiQuery
         private readonly bool _isCollection;
 
         public Type ItemType { get; }
-        public ParameterExpression FilterParameter { get; set; }
-        public Expression Filter { get; set; }
+
+        // additional expand options
+        public FilterQueryOption Filter { get; set; }
+        public OrderByQueryOption Orderby { get; set; }
+        public TopQueryOption Top { get; set; }
+        public SkipQueryOption Skip { get; set; }
 
         public IDictionary<PropertyInfo, ExpandClause> NestedExpands { get; }
+        public ParameterExpression NestedExpandParameter { get; set; }
 
         public ExpandClause(Type itemType, PropertyInfo property, bool isCollection)
         {
@@ -30,48 +35,39 @@ namespace OpenApiQuery
         {
             Expression navigationProperty = Expression.MakeMemberAccess(it, _navigationProperty);
 
-            // NavigationProperty = it.NavigationProperty
-
-            if (Filter != null && _isCollection)
-            {
-                // TODO cache generics stuff
-
-                // NavigationProperty = it.NavigationProperty.Where( arg => filter )
-                var funcType = typeof(Func<,>).MakeGenericType(ItemType, typeof(bool));
-                var expression = Expression.Lambda(funcType,
-                    Filter,
-                    FilterParameter
-                );
-
-                navigationProperty = Expression.Call(null, WhereInfo.MakeGenericMethod(ItemType),
-                    navigationProperty,
-                    expression
-                );
-            }
-
             if (_isCollection)
             {
-                // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } )
-                var expression = BuildSelectLambdaExpression(ItemType,
-                    selectClause,
-                    NestedExpands);
+                // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } ).ToArray()
+                // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } ).ToList()
+
+                // apply all constraints
+                if (Orderby != null)
+                {
+                    navigationProperty = Orderby.ApplyTo(navigationProperty);
+                }
+                if (Filter != null)
+                {
+                    navigationProperty = Filter.ApplyTo(navigationProperty);
+                }
+                if (Skip != null)
+                {
+                    navigationProperty = Skip.ApplyTo(navigationProperty, ItemType);
+                }
+                if (Top != null)
+                {
+                    navigationProperty = Top.ApplyTo(navigationProperty, ItemType);
+                }
+
+                // build proper select of properties
+                var expression = BuildSelectLambdaExpression(ItemType, selectClause, NestedExpands);
 
                 navigationProperty = Expression.Call(null,
                     SelectInfo.MakeGenericMethod(ItemType, ItemType),
                     navigationProperty,
                     expression
                 );
-            }
-            else
-            {
-                // NavigationProperty = new Item { ... }
-                navigationProperty = BuildMemberInit(ItemType, navigationProperty, selectClause, NestedExpands);
-            }
 
-            if (_isCollection)
-            {
-                // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } ).ToArray()
-                // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } ).ToList()
+                // add ToList/ToArray
                 var loadFunction = _navigationProperty.PropertyType.IsArray
                     ? ToArrayInfo.MakeGenericMethod(ItemType)
                     : ToListInfo.MakeGenericMethod(ItemType);
@@ -80,6 +76,11 @@ namespace OpenApiQuery
                     loadFunction,
                     navigationProperty
                 );
+            }
+            else
+            {
+                // NavigationProperty = new Item { ... }
+                navigationProperty = BuildMemberInit(ItemType, navigationProperty, selectClause, NestedExpands);
             }
 
             return Expression.Bind(_navigationProperty, navigationProperty);
@@ -93,7 +94,7 @@ namespace OpenApiQuery
             var body = BuildMemberInit(itemType, arg, selectClause, expands);
             var funcType = typeof(Func<,>).MakeGenericType(itemType, itemType);
 
-            // arg => new Item { ... } 
+            // arg => new Item { ... }
             return Expression.Lambda(funcType, body, arg);
         }
 
@@ -110,7 +111,7 @@ namespace OpenApiQuery
             // })
 
             var selectAllProperties = select == null ||
-                                      select.IsStarSelect || 
+                                      select.IsStarSelect ||
                                       select.SelectClauses == null ||
                                       select.SelectClauses.Count == 0;
 
@@ -133,7 +134,7 @@ namespace OpenApiQuery
                 else if (SelectExpandQueryOption.IsNavigationProperty(property, out _, out _))
                 {
                     // navigation properties that are not expanded, are not loaded
-                    // Prop1 = null 
+                    // Prop1 = null
                     memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
                 }
                 else if (selectAllProperties || select.SelectClauses.ContainsKey(property))
@@ -149,8 +150,6 @@ namespace OpenApiQuery
             );
         }
 
-        private static readonly MethodInfo WhereInfo =
-            ReflectionHelper.GetMethod<IEnumerable<object>, IEnumerable<object>>(x => x.Where(y => y == null));
 
         private static readonly MethodInfo SelectInfo =
             ReflectionHelper.GetMethod<IEnumerable<object>, object>(x => x.Select(y => y));

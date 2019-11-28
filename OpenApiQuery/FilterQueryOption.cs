@@ -1,16 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenApiQuery.Parsing;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
     public class FilterQueryOption
     {
+        private static readonly MethodInfo WhereInfo =
+            ReflectionHelper.GetMethod<IEnumerable<object>, IEnumerable<object>>(x => x.Where(y => y == null));
+
         public ParameterExpression Parameter { get; set; }
 
         public FilterQueryOption(Type elementType)
@@ -33,6 +39,24 @@ namespace OpenApiQuery
             }
 
             return queryable;
+        }
+        public Expression ApplyTo(Expression expression)
+        {
+            if (FilterClause != null)
+            {
+                var funcType = typeof(Func<,>).MakeGenericType(Parameter.Type, typeof(bool));
+                var whereParam = Expression.Lambda(funcType,
+                    FilterClause,
+                    Parameter
+                );
+
+                expression = Expression.Call(null, WhereInfo.MakeGenericMethod(Parameter.Type),
+                    expression,
+                    whereParam
+                );
+            }
+
+            return expression;
         }
 
         public void Initialize(HttpContext httpContext, ILogger<OpenApiQueryOptions> logger, ModelStateDictionary modelStateDictionary)
@@ -60,6 +84,20 @@ namespace OpenApiQuery
                 {
                     modelStateDictionary.TryAddModelError("$filter", "Only one $filter can be specified per request");
                 }
+            }
+        }
+
+        internal void Initialize(QueryExpressionParser parser, ModelStateDictionary modelStateDictionary)
+        {
+            try
+            {
+                parser.PushThis(Parameter);
+                FilterClause = parser.CommonExpr();
+                parser.PopThis();
+            }
+            catch (Exception e)
+            {
+                modelStateDictionary.TryAddModelException("$filter", e);
             }
         }
     }

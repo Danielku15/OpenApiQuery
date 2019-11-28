@@ -107,6 +107,107 @@ namespace OpenApiQuery.Test.Sample
         }
 
         [TestMethod]
+        public async Task TestExpand_WithExpand_AllOptions()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog {Name = "Match1"},
+                        new Blog {Name = "Match2"},
+                        new Blog {Name = "NotMatch3"},
+                        new Blog {Name = "NotMatch4"},
+                        new Blog {Name = "Match5"}
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($filter=startsWith(name, 'Match');$orderby=name desc;$skip=1;$top=2)");
+            Assert.AreEqual(1, response.ResultItems.Length);
+            Assert.IsNotNull(response.ResultItems[0].Blogs);
+            Assert.AreEqual("Match2,Match1",
+                string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
+        }
+
+        [TestMethod]
+        public async Task TestExpand_WithExpand_ExpandOrderBy()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog {Name = "D"},
+                        new Blog {Name = "C"},
+                        new Blog {Name = "B"},
+                        new Blog {Name = "A"}
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($orderby=name)");
+            Assert.AreEqual(1, response.ResultItems.Length);
+            Assert.IsNotNull(response.ResultItems[0].Blogs);
+            Assert.AreEqual("A,B,C,D",
+                string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
+        }
+
+        [TestMethod]
+        public async Task TestExpand_WithExpand_ExpandTop()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog {Name = "D"},
+                        new Blog {Name = "C"},
+                        new Blog {Name = "B"},
+                        new Blog {Name = "A"}
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($top=2)");
+            Assert.AreEqual(1, response.ResultItems.Length);
+            Assert.IsNotNull(response.ResultItems[0].Blogs);
+            Assert.AreEqual("D,C",
+                string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
+        }
+        
+        [TestMethod]
+        public async Task TestExpand_WithExpand_ExpandSkip()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog {Name = "D"},
+                        new Blog {Name = "C"},
+                        new Blog {Name = "B"},
+                        new Blog {Name = "A"}
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($skip=2)");
+            Assert.AreEqual(1, response.ResultItems.Length);
+            Assert.IsNotNull(response.ResultItems[0].Blogs);
+            Assert.AreEqual("B,A",
+                string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
+        }
+
+        [TestMethod]
         public async Task TestExpand_WithExpand_SingleProperty()
         {
             using var server = SetupSample(new[]
