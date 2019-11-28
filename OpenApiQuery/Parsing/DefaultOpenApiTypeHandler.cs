@@ -42,8 +42,14 @@ namespace OpenApiQuery.Parsing
                     it
                 ).Compile();
 
+                var value = Expression.Parameter(typeof(object), "value");
+                var set = Expression.Lambda<Action<object, object>>(
+                    Expression.Assign(Expression.MakeMemberAccess(Expression.Convert(it, clrType), property), Expression.Convert(value, property.PropertyType)),
+                    it, value
+                ).Compile();
+
                 var jsonName = property.Name;
-                apiType.Properties[jsonName] = new OpenApiTypeProperty(property, jsonName, property.PropertyType, get);
+                apiType.Properties[jsonName] = new OpenApiTypeProperty(property, jsonName, property.PropertyType, get, set);
             }
 
             return apiType;

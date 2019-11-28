@@ -8,5 +8,6 @@ namespace OpenApiQuery.Parsing
         string JsonName { get; }
         Type ClrType { get; }
         IDictionary<string, IOpenApiTypeProperty> Properties { get; }
+        bool TryGetProperty(string propertyName, out IOpenApiTypeProperty property);
     }
 }

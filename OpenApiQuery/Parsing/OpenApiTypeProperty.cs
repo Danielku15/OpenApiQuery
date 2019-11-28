@@ -6,16 +6,19 @@ namespace OpenApiQuery.Parsing
     public class OpenApiTypeProperty : IOpenApiTypeProperty
     {
         private readonly Func<object, object> _get;
+        private Action<object, object> _set;
         public PropertyInfo ClrProperty { get; }
         public string JsonName { get; }
         public Type ValueType { get; set; }
 
         public OpenApiTypeProperty(
             PropertyInfo clrProperty, string jsonName, Type valueType,
-            Func<object, object> get
+            Func<object, object> get,
+            Action<object, object> set
         )
         {
             _get = get;
+            _set = set;
             ClrProperty = clrProperty;
             JsonName = jsonName;
             ValueType = valueType;
@@ -26,6 +29,10 @@ namespace OpenApiQuery.Parsing
             return _get(instance);
         }
 
+        public void SetProperty(object instance, object value)
+        {
+            _set(instance, value);
+        }
 
         public bool Equals(IOpenApiTypeProperty other)
         {

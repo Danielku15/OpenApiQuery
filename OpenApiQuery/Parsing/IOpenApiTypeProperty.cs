@@ -10,5 +10,6 @@ namespace OpenApiQuery.Parsing
         Type ValueType { get; set; }
 
         object GetValue(object instance);
+        void SetProperty(object instance, object value);
     }
 }
