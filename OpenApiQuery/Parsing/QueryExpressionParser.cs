@@ -410,9 +410,9 @@ namespace OpenApiQuery.Parsing
             {
                 var op = (string) TokenData;
 
-                ExpressionType? expression = op.ToLowerInvariant() switch
+                var expression = op.ToLowerInvariant() switch
                 {
-                    "add" => ExpressionType.Add,
+                    "add" => (ExpressionType?)ExpressionType.Add,
                     "sub" => ExpressionType.Subtract,
                     _ => null
                 };
@@ -439,9 +439,9 @@ namespace OpenApiQuery.Parsing
             {
                 var op = (string) TokenData;
 
-                ExpressionType? expression = op.ToLowerInvariant() switch
+                var expression = op.ToLowerInvariant() switch
                 {
-                    "mul" => ExpressionType.Multiply,
+                    "mul" => (ExpressionType?)ExpressionType.Multiply,
                     "div" => ExpressionType.Divide,
                     "mod" => ExpressionType.Modulo,
                     _ => null
