@@ -324,7 +324,11 @@ namespace OpenApiQuery.Serialization.SystemText
 
                 var propertyName = reader.GetString();
 
-                if (itemType.TryGetProperty(propertyName, out var property))
+                if (propertyName == "@odata.type")
+                {
+                    // TOOD: support polymorphism
+                    reader.Skip();                }
+                else if (itemType.TryGetProperty(propertyName, out var property))
                 {
                     var propertyType = typeHandler.ResolveType(property.ClrProperty.PropertyType);
                     var value = ReadValue(ref reader,
@@ -339,8 +343,9 @@ namespace OpenApiQuery.Serialization.SystemText
                 }
                 else
                 {
-                    // TODO: be less strict here?
-                    throw new JsonException($"Unexpected property {propertyName}.");
+                    // TODO: how do we want to treat unknown props? fail or ignore?
+                    // throw new JsonException($"Unexpected property {propertyName}.");
+                    reader.Skip();
                 }
             }
 
