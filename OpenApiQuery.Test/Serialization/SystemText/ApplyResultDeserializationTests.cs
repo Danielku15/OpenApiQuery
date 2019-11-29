@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace OpenApiQuery.Test.Serialization
+namespace OpenApiQuery.Test.Serialization.SystemText
 {
     [TestClass]
-    public class DeltaDeserializationTests
+    public class ApplyResultDeserializationTests : SerializationTestBase
     {
         [TestMethod]
         public async Task TestDeserialize_Simple()
@@ -32,22 +32,17 @@ namespace OpenApiQuery.Test.Serialization
         }
 
         [TestMethod]
-        public async Task TestDeserialize_NestedObjects_Single()
+        public async Task TestDeserialize_PartialProperties()
         {
         }
 
         [TestMethod]
-        public async Task TestDeserialize_NestedObjects_Collection()
+        public async Task TestDeserialize_PartialNavigationProperties_Collection()
         {
         }
 
         [TestMethod]
-        public async Task TestDeserialize_NestedDeltas_Single()
-        {
-        }
-
-        [TestMethod]
-        public async Task TestDeserialize_NestedDeltas_Collection()
+        public async Task TestDeserialize_PartialNavigationProperties_Single()
         {
         }
     }

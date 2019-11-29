@@ -107,7 +107,7 @@ namespace OpenApiQuery.Serialization.SystemText
             writer.WritePropertyName(ResultValuesPropertyName);
 
             var itemType = _typeHandler.ResolveType(typeof(T));
-            var selectClause = value.Options.SelectExpand.RootSelectClause;
+            var selectClause = value.Options?.SelectExpand.RootSelectClause;
             JsonHelper.WriteArray(writer, value.ResultItems, itemType, selectClause, _typeHandler, options);
 
             writer.WriteEndObject();

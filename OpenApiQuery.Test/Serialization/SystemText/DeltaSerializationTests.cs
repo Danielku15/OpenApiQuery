@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace OpenApiQuery.Test.Serialization
+namespace OpenApiQuery.Test.Serialization.SystemText
 {
     [TestClass]
-    public class DeltaSerializationTests
+    public class DeltaSerializationTests : SerializationTestBase
     {
         [TestMethod]
         public async Task TestSerialize_Simple()

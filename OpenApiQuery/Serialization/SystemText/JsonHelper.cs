@@ -106,8 +106,9 @@ namespace OpenApiQuery.Serialization.SystemText
                         selectClause.SelectClauses?.TryGetValue(property.ClrProperty, out subClause) == true ||
                         selectClause.IsStarSelect)
                     {
-                        var jsonPropertyName = property.JsonName;
-                        writer.WritePropertyName(jsonPropertyName);
+                        var key = options.PropertyNamingPolicy.ConvertName(property.JsonName);
+                        writer.WritePropertyName(JsonEncodedText.Encode(key));
+
                         WriteValue(writer,
                             typeHandler.ResolveType(property.ClrProperty.PropertyType),
                             property.GetValue(item),
@@ -150,12 +151,13 @@ namespace OpenApiQuery.Serialization.SystemText
 
             foreach (DictionaryEntry dictionaryEntry in value)
             {
-                var key = options.DictionaryKeyPolicy.ConvertName(dictionaryEntry.Key.ToString());
+                var key = options.DictionaryKeyPolicy != null
+                    ? options.DictionaryKeyPolicy.ConvertName(dictionaryEntry.Key.ToString())
+                    : dictionaryEntry.Key.ToString();
                 writer.WritePropertyName(JsonEncodedText.Encode(key));
 
                 WriteValue(writer, valueType, dictionaryEntry.Value, null, typeHandler, options);
             }
-
 
             writer.WriteEndObject();
         }
