@@ -11,13 +11,16 @@ namespace OpenApiQuery.Test
 {
     public static class HttpClientExtensions
     {
+        private static readonly DefaultOpenApiTypeHandler TypeHandler = new DefaultOpenApiTypeHandler();
+
         private static readonly JsonOptions Options = new JsonOptions
         {
             JsonSerializerOptions =
             {
                 Converters =
                 {
-                    new OpenApiQueryConverterFactory(new DefaultOpenApiTypeHandler())
+                    new OpenApiQueryDeltaConverterFactory(TypeHandler),
+                    new OpenApiQueryResultConverterFactory(TypeHandler)
                 }
             }
         };

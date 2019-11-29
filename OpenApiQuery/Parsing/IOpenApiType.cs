@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace OpenApiQuery.Parsing
 {
@@ -7,7 +8,9 @@ namespace OpenApiQuery.Parsing
     {
         string JsonName { get; }
         Type ClrType { get; }
-        IDictionary<string, IOpenApiTypeProperty> Properties { get; }
+        IEnumerable<IOpenApiTypeProperty> Properties { get; }
+        void RegisterProperty(IOpenApiTypeProperty property);
+        bool TryGetProperty(PropertyInfo clrProperty, out IOpenApiTypeProperty property);
         bool TryGetProperty(string propertyName, out IOpenApiTypeProperty property);
     }
 }

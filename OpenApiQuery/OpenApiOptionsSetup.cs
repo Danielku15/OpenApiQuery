@@ -17,7 +17,8 @@ namespace OpenApiQuery
 
         public void Configure(JsonOptions options)
         {
-            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryConverterFactory(_typeHandler));
+            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryResultConverterFactory(_typeHandler));
+            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryDeltaConverterFactory(_typeHandler));
         }
     }
 }

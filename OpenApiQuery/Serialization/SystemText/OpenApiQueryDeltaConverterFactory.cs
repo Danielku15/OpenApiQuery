@@ -6,11 +6,11 @@ using OpenApiQuery.Utils;
 
 namespace OpenApiQuery.Serialization.SystemText
 {
-    public class OpenApiQueryConverterFactory : JsonConverterFactory
+    public class OpenApiQueryDeltaConverterFactory : JsonConverterFactory
     {
         private readonly IOpenApiTypeHandler _typeHandler;
 
-        public OpenApiQueryConverterFactory(IOpenApiTypeHandler typeHandler)
+        public OpenApiQueryDeltaConverterFactory(IOpenApiTypeHandler typeHandler)
         {
             _typeHandler = typeHandler;
         }
@@ -18,7 +18,7 @@ namespace OpenApiQuery.Serialization.SystemText
         public override bool CanConvert(Type typeToConvert)
         {
             return typeToConvert.IsGenericType &&
-                   typeToConvert.GetGenericTypeDefinition() == typeof(OpenApiQueryApplyResult<>);
+                   typeToConvert.GetGenericTypeDefinition() == typeof(Delta<>);
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -28,13 +28,13 @@ namespace OpenApiQuery.Serialization.SystemText
 
         private JsonConverter CreateConverter<T>()
         {
-            return new OpenApiQueryApplyResultConverter<T>(_typeHandler);
+            return new OpenApiQueryDeltaConverter<T>(_typeHandler);
         }
 
         private static readonly
-            GenericMethodCallHelper<OpenApiQueryConverterFactory, JsonConverter>
+            GenericMethodCallHelper<OpenApiQueryDeltaConverterFactory, JsonConverter>
             CreateConverterOfT =
-                new GenericMethodCallHelper<OpenApiQueryConverterFactory, JsonConverter>(
+                new GenericMethodCallHelper<OpenApiQueryDeltaConverterFactory, JsonConverter>(
                     x => x.CreateConverter<object>()
                 );
     }

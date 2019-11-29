@@ -31,7 +31,14 @@ namespace OpenApiQuery.Parsing
 
         public void SetValue(object instance, object value)
         {
-            _set(instance, value);
+            if (instance is Delta d)
+            {
+                d.SetValue(ClrProperty, value);
+            }
+            else
+            {
+                _set(instance, value);
+            }
         }
 
         public bool Equals(IOpenApiTypeProperty other)
