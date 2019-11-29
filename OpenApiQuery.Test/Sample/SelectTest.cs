@@ -109,7 +109,7 @@ namespace OpenApiQuery.Test.Sample
 
             var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
 
-            var resultItems = document.RootElement.GetProperty("resultItems");
+            var resultItems = document.RootElement.GetProperty("value");
             Assert.AreEqual(2, resultItems.GetArrayLength());
 
             foreach (var item in resultItems.EnumerateArray())
@@ -196,7 +196,7 @@ namespace OpenApiQuery.Test.Sample
             response.EnsureSuccessStatusCode();
             var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
 
-            var resultItems = document.RootElement.GetProperty("resultItems");
+            var resultItems = document.RootElement.GetProperty("value");
 
             var user = resultItems.EnumerateArray().First();
             var blogs = user.GetProperty("Blogs");

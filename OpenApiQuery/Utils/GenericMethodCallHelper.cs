@@ -10,13 +10,11 @@ namespace OpenApiQuery.Utils
     /// A small helper class to call a generic method using Type variables.
     /// </summary>
     /// <typeparam name="TThis"></typeparam>
-    /// <typeparam name="TParam1"></typeparam>
-    /// <typeparam name="TParam2"></typeparam>
     /// <typeparam name="TRet"></typeparam>
-    internal class GenericMethodCallHelper<TThis, TParam1, TParam2, TRet>
+    internal class GenericMethodCallHelper<TThis, TRet>
     {
-        private readonly ConcurrentDictionary<int, Func<TThis, TParam1, TParam2, TRet>> _cache =
-            new ConcurrentDictionary<int, Func<TThis, TParam1, TParam2, TRet>>();
+        private readonly ConcurrentDictionary<int, Func<TThis, TRet>> _cache =
+            new ConcurrentDictionary<int, Func<TThis, TRet>>();
 
         private readonly MethodInfo _method;
 
@@ -25,7 +23,7 @@ namespace OpenApiQuery.Utils
             _method = ((MethodCallExpression) method.Body).Method.GetGenericMethodDefinition();
         }
 
-        public TRet Invoke(TThis instance, TParam1 arg1, TParam2 arg2, params Type[] typeArguments)
+        public TRet Invoke(TThis instance, params Type[] typeArguments)
         {
             var key = TypeArrayKey(typeArguments);
             if (!_cache.TryGetValue(key, out var method))
@@ -33,7 +31,7 @@ namespace OpenApiQuery.Utils
                 _cache[key] = method = BuildMethodCall(typeArguments);
             }
 
-            return method(instance, arg1, arg2);
+            return method(instance);
         }
 
         private static int TypeArrayKey(Type[] types)
@@ -46,11 +44,11 @@ namespace OpenApiQuery.Utils
             return hashCode;
         }
 
-        private Func<TThis, TParam1, TParam2, TRet> BuildMethodCall(Type[] typeArguments)
+        private Func<TThis, TRet> BuildMethodCall(Type[] typeArguments)
         {
-            return (Func<TThis, TParam1, TParam2, TRet>) MakeGenericMethodCall(_method,
+            return (Func<TThis, TRet>) MakeGenericMethodCall(_method,
                 typeof(TThis), typeof(TRet),
-                new[] {typeof(TParam1), typeof(TParam2)}, typeArguments);
+                new Type[0], typeArguments);
         }
 
         private static Delegate MakeGenericMethodCall(MethodInfo method,

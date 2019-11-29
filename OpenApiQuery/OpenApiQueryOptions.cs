@@ -40,9 +40,31 @@ namespace OpenApiQuery
             Count = new CountQueryOption();
         }
 
-        public async Task<OpenApiQueryApplyResult<T>> ApplyTo<T>(IQueryable<T> queryable,
+        public void Initialize(HttpContext httpContext, ModelStateDictionary modelState)
+        {
+            HttpContext = httpContext;
+            ModelState = modelState;
+            var logger = httpContext.RequestServices.GetRequiredService<ILogger<OpenApiQueryOptions>>();
+            SelectExpand.Initialize(httpContext, logger, ModelState);
+            Filter.Initialize(httpContext, logger, ModelState);
+            OrderBy.Initialize(httpContext, logger, ModelState);
+            Skip.Initialize(httpContext, ModelState);
+            Top.Initialize(httpContext, ModelState);
+            Count.Initialize(httpContext, ModelState);
+        }
+    }
+
+    [OpenApiQueryParameterBindingAttribute]
+    public class OpenApiQueryOptions<T> : OpenApiQueryOptions
+    {
+        public OpenApiQueryOptions()
+            : base(typeof(T))
+        {
+        }
+
+        public async Task<OpenApiQueryApplyResult<T>> ApplyToAsync(
+            IQueryable<T> queryable,
             CancellationToken cancellationToken)
-            where T : new()
         {
             // The order of applying the items to the queryable is important
 
@@ -65,35 +87,7 @@ namespace OpenApiQuery
 
             var result = await queryable.ToArrayAsync(cancellationToken);
 
-            return new OpenApiQueryApplyResult<T>(result, count);
-        }
-
-        public void Initialize(HttpContext httpContext, ModelStateDictionary modelState)
-        {
-            HttpContext = httpContext;
-            ModelState = modelState;
-            var logger = httpContext.RequestServices.GetRequiredService<ILogger<OpenApiQueryOptions>>();
-            SelectExpand.Initialize(httpContext, logger, ModelState);
-            Filter.Initialize(httpContext, logger, ModelState);
-            OrderBy.Initialize(httpContext, logger, ModelState);
-            Skip.Initialize(httpContext, ModelState);
-            Top.Initialize(httpContext, ModelState);
-            Count.Initialize(httpContext, ModelState);
-        }
-    }
-
-    [OpenApiQueryParameterBindingAttribute]
-    public class OpenApiQueryOptions<T> : OpenApiQueryOptions
-        where T : new()
-    {
-        public OpenApiQueryOptions()
-            : base(typeof(T))
-        {
-        }
-
-        public OpenApiQueryResult ApplyTo(IQueryable<T> queryable)
-        {
-            return new OpenApiQueryResult(queryable, this);
+            return new OpenApiQueryApplyResult<T>(this, result, count);
         }
     }
 }

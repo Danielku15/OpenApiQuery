@@ -9,11 +9,16 @@ namespace OpenApiQuery.Parsing
         public string JsonName { get; }
         public IDictionary<string, IOpenApiTypeProperty> Properties { get; }
 
+        public bool TryGetProperty(string propertyName, out IOpenApiTypeProperty property)
+        {
+            return Properties.TryGetValue(propertyName, out property);
+        }
+
         public OpenApiType(Type clrType, string jsonName)
         {
             ClrType = clrType;
             JsonName = jsonName;
-            Properties = new Dictionary<string, IOpenApiTypeProperty>();
+            Properties = new Dictionary<string, IOpenApiTypeProperty>(StringComparer.InvariantCultureIgnoreCase);
         }
 
         public bool Equals(IOpenApiType other)
@@ -48,7 +53,7 @@ namespace OpenApiQuery.Parsing
                 return false;
             }
 
-            return Equals((OpenApiType) obj);
+            return Equals((OpenApiType)obj);
         }
 
         public override int GetHashCode()

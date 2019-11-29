@@ -717,7 +717,7 @@ namespace OpenApiQuery.Parsing
         {
             try
             {
-                return _binder.BindMember(expression, tokenData);
+                return _binder.BindProperty(expression, tokenData);
             }
             catch (BindException e)
             {

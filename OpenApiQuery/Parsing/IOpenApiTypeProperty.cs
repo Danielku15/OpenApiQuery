@@ -7,8 +7,8 @@ namespace OpenApiQuery.Parsing
     {
         PropertyInfo ClrProperty { get; }
         string JsonName { get; }
-        Type ValueType { get; set; }
 
         object GetValue(object instance);
+        void SetValue(object instance, object value);
     }
 }

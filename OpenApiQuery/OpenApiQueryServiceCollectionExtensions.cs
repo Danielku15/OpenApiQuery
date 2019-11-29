@@ -14,9 +14,8 @@ namespace OpenApiQuery
             var services = builder.Services;
 
             services.TryAddEnumerable(ServiceDescriptor
-                .Transient<IConfigureOptions<MvcOptions>, OpenApiOptionsSetup>());
+                .Transient<IConfigureOptions<JsonOptions>, OpenApiOptionsSetup>());
             services.AddSingleton<IOpenApiTypeHandler, DefaultOpenApiTypeHandler>();
-            services.AddSingleton<IOpenApiQuerySerializerProvider, DefaultOpenApiQuerySerializerProvider>();
 
             return builder;
         }
