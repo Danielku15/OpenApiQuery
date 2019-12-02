@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
@@ -21,12 +20,38 @@ namespace OpenApiQuery
         {
             ChangedProperties[property] = value;
         }
+
+        protected void ApplyPatch(object instance)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            // TODO: cache getter/setter
+            foreach (var changedProperty in ChangedProperties)
+            {
+                if (changedProperty.Value is Delta d)
+                {
+                    d.ApplyPatch(changedProperty.Key.GetValue(instance));
+                }
+                else
+                {
+                    changedProperty.Key.SetValue(instance, changedProperty.Value);
+                }
+            }
+        }
     }
 
     public class Delta<T> : Delta
     {
         public Delta() : base(typeof(T))
         {
+        }
+
+        public void ApplyPatch(T instance)
+        {
+            base.ApplyPatch(instance);
         }
 
         public TValue GetValue<TValue>(Expression<Func<T, TValue>> property)
