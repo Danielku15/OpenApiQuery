@@ -52,13 +52,17 @@ namespace OpenApiQuery.Utils
 
         public static bool ImplementsDictionary(Type type, out Type keyType, out Type valueType)
         {
-            if (type.IsGenericType &&
-                typeof(IDictionary<,>).MakeGenericType(type.GetGenericArguments()[0], type.GetGenericArguments()[1])
-                    .IsAssignableFrom(type))
+            if (type.IsGenericType)
             {
-                keyType = type.GetGenericArguments()[0];
-                valueType = type.GetGenericArguments()[1];
-                return true;
+                var args = type.GetGenericArguments();
+                if(args.Length == 2 &&
+                   typeof(IDictionary<,>).MakeGenericType(args[0], args[1])
+                    .IsAssignableFrom(type))
+                {
+                    keyType = args[0];
+                    valueType = args[1];
+                    return true;
+                }
             }
 
             keyType = null;

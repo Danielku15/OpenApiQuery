@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text.Json;
 using OpenApiQuery.Parsing;
 using OpenApiQuery.Utils;
@@ -171,12 +172,6 @@ namespace OpenApiQuery.Serialization.SystemText
             JsonSerializerOptions options,
             bool objectsAsDelta = false)
         {
-            // TODO: dictionary and enumerable handling
-            if (!reader.Read())
-            {
-                throw new JsonException($"Unexpected end of stream.");
-            }
-
             if (reader.TokenType == JsonTokenType.Null)
             {
                 return null;
@@ -187,7 +182,11 @@ namespace OpenApiQuery.Serialization.SystemText
                 return reader.GetString();
             }
 
-            if (ReflectionHelper.ImplementsEnumerable(valueClrType, out var itemType))
+            if (ReflectionHelper.ImplementsDictionary(valueClrType, out _, out _))
+            {
+                return JsonSerializer.Deserialize(ref reader, valueClrType, options);
+            }
+            else if (ReflectionHelper.ImplementsEnumerable(valueClrType, out var itemType))
             {
                 var array = ReadArray(ref reader,
                     typeHandler.ResolveType(itemType),
@@ -197,11 +196,6 @@ namespace OpenApiQuery.Serialization.SystemText
                     objectsAsDelta);
                 // TODO: convert to actual target type
                 return array;
-            }
-            else if (ReflectionHelper.ImplementsDictionary(valueClrType, out var dictKeyType, out var dictValueType))
-            {
-                // TODO: dictionarySupport
-                return null;
             }
             else if (valueType == null)
             {
@@ -221,7 +215,7 @@ namespace OpenApiQuery.Serialization.SystemText
             JsonSerializerOptions options,
             bool objectsAsDelta = false)
         {
-            if (!reader.Read())
+            if (reader.TokenType == JsonTokenType.StartArray && !reader.Read())
             {
                 throw new JsonException($"Unexpected end of stream.");
             }
@@ -252,6 +246,9 @@ namespace OpenApiQuery.Serialization.SystemText
                 case JsonTokenType.Number:
                 case JsonTokenType.True:
                 case JsonTokenType.False:
+                    return ReadNativeArray(ref reader, itemClrType, options);
+
+
                     // TODO: read array even though we already started it? we might need to do reading on our own
                     // simple arrays
                     return JsonSerializer.Deserialize(ref reader, itemClrType.MakeArrayType(), options);
@@ -262,6 +259,28 @@ namespace OpenApiQuery.Serialization.SystemText
                 default:
                     throw new JsonException($"Unexpected JSON Token {reader.TokenType}.");
             }
+        }
+
+        private static object ReadNativeArray(
+            ref Utf8JsonReader reader,
+            Type itemClrType,
+            JsonSerializerOptions options)
+        {
+            var resultItems = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemClrType));
+
+            do
+            {
+                if (reader.TokenType == JsonTokenType.EndArray)
+                {
+                    var array = Array.CreateInstance(itemClrType, resultItems.Count);
+                    resultItems.CopyTo(array, 0);
+                    return array;
+                }
+
+                resultItems.Add(JsonSerializer.Deserialize(ref reader, itemClrType, options));
+            } while (reader.Read());
+
+            throw new JsonException($"Unexpected end of stream.");
         }
 
         private static object ReadObjectArray(
@@ -286,7 +305,7 @@ namespace OpenApiQuery.Serialization.SystemText
                     return array;
                 }
 
-                resultItems.Add(ReadObject(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
+                resultItems.Add(ReadValue(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
             } while (reader.Read());
 
             throw new JsonException($"Unexpected end of stream.");
@@ -327,9 +346,15 @@ namespace OpenApiQuery.Serialization.SystemText
                 if (propertyName == "@odata.type")
                 {
                     // TOOD: support polymorphism
-                    reader.Skip();                }
+                    reader.Skip();
+                }
                 else if (itemType.TryGetProperty(propertyName, out var property))
                 {
+                    if (!reader.Read())
+                    {
+                        throw new JsonException("Unexpected end of stream.");
+                    }
+
                     var propertyType = typeHandler.ResolveType(property.ClrProperty.PropertyType);
                     var value = ReadValue(ref reader,
                         propertyType,
