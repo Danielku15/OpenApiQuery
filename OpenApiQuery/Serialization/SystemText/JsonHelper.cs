@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Text.Json;
 using OpenApiQuery.Parsing;
 using OpenApiQuery.Utils;
@@ -10,6 +9,23 @@ namespace OpenApiQuery.Serialization.SystemText
 {
     internal class JsonHelper
     {
+        // TODO: theoretically we should be able to replace the JsonHelper with another JsonConverter
+        // Idea: wherever we use the JsonHelper we call JsonSerializer.Serialize or Deserialize
+        // but we "clone" the options and inject an additional JsonConverterFactory that handles
+        // all API types and passes on the SelectClause and type information as context.
+        //  OpenApiQueryApplyResultConverter.Write() {
+        //     var options = CloneOptions(options);
+        //     options.Converter.Insert(0, new OpenApiQueryObjectConverter(selectClause));
+        //     JsonSerializer.Serialize(obj, options);
+        // }
+        // class OpenApiQueryObjectConverter {
+        //     Write() {
+        //        // write object as below
+        //     }
+        // }
+
+
+
         public static void WriteValue(
             Utf8JsonWriter writer,
             IOpenApiType itemType,
