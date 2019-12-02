@@ -54,9 +54,13 @@ namespace OpenApiQuery.Serialization.SystemText
                 {
                     if (type.TryGetProperty(changedProperty.Key, out var property))
                     {
-                        writer.WritePropertyName(property.JsonName);
+                        var propertyClrType = property.ClrProperty.PropertyType;
+                        var propertyApiType = _typeHandler.ResolveType(propertyClrType);
+
+                        var key = options.PropertyNamingPolicy.ConvertName(property.JsonName);
+                        writer.WritePropertyName(JsonEncodedText.Encode(key));
                         JsonHelper.WriteValue(writer,
-                            type,
+                            propertyApiType,
                             changedProperty.Value,
                             null,
                             _typeHandler,

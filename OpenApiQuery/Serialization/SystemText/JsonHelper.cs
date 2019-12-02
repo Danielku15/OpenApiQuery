@@ -27,7 +27,7 @@ namespace OpenApiQuery.Serialization.SystemText
                     writer.WriteStringValue(s);
                     break;
                 case Delta d:
-                    JsonSerializer.Serialize(writer, d, options);
+                    JsonSerializer.Serialize(writer, d, d.GetType(), options);
                     break;
 
                 case IDictionary c:
