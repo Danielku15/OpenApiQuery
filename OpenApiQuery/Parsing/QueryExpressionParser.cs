@@ -151,12 +151,28 @@ namespace OpenApiQuery.Parsing
                             CurrentTokenKind = QueryExpressionTokenKind.Keyword;
                             break;
                         default:
-                            if (long.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                            if (DateTimeOffset.TryParse(token,
+                                CultureInfo.InvariantCulture,
+                                DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind |
+                                DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite,
+                                out var dateTimeOffset))
+                            {
+                                TokenData = dateTimeOffset;
+                                CurrentTokenKind = QueryExpressionTokenKind.DateTimeOffsetLiteral;
+                            }
+                            else if (Guid.TryParse(token, out var guid))
+                            {
+                                TokenData = guid;
+                                CurrentTokenKind = QueryExpressionTokenKind.GuidLiteral;
+                            }
+                            else if (long.TryParse(token,
+                                NumberStyles.Integer,
+                                CultureInfo.InvariantCulture,
                                 out var integer))
                             {
                                 if (integer >= int.MinValue && integer <= int.MaxValue)
                                 {
-                                    TokenData = (int) integer;
+                                    TokenData = (int)integer;
                                     CurrentTokenKind = QueryExpressionTokenKind.IntegerLiteral;
                                 }
                                 else
@@ -165,12 +181,14 @@ namespace OpenApiQuery.Parsing
                                     CurrentTokenKind = QueryExpressionTokenKind.LongLiteral;
                                 }
                             }
-                            else if (double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture,
+                            else if (double.TryParse(token,
+                                NumberStyles.Float,
+                                CultureInfo.InvariantCulture,
                                 out var floating))
                             {
                                 if (floating >= float.MinValue && floating <= float.MaxValue)
                                 {
-                                    TokenData = (int) floating;
+                                    TokenData = (int)floating;
                                     CurrentTokenKind = QueryExpressionTokenKind.SingleLiteral;
                                 }
                                 else
@@ -178,16 +196,6 @@ namespace OpenApiQuery.Parsing
                                     TokenData = floating;
                                     CurrentTokenKind = QueryExpressionTokenKind.DoubleLiteral;
                                 }
-                            }
-                            else if (Guid.TryParse(token, out var guid))
-                            {
-                                TokenData = guid;
-                                CurrentTokenKind = QueryExpressionTokenKind.GuidLiteral;
-                            }
-                            else if (DateTimeOffset.TryParse(token, out var dateTimeOffset))
-                            {
-                                TokenData = dateTimeOffset;
-                                CurrentTokenKind = QueryExpressionTokenKind.DateTimeOffsetLiteral;
                             }
                             else
                             {
@@ -201,13 +209,23 @@ namespace OpenApiQuery.Parsing
             } while (CurrentTokenKind == QueryExpressionTokenKind.No);
         }
 
+        private static readonly HashSet<char> FullTokenAllowedChars = new HashSet<char>
+        {
+            '_',
+            '$',
+            '-',
+            '+',
+            ':',
+            '.'
+        };
+
         private string ReadFullToken()
         {
             var startPos = Position;
             while (Position < _value.Length)
             {
                 var ch = _currentCharacter;
-                if (char.IsLetterOrDigit(ch) || ch == '_' || ch == '$')
+                if (char.IsLetterOrDigit(ch) || FullTokenAllowedChars.Contains(ch))
                 {
                     // valid char, continue search for end
                     NextCharacter();
@@ -313,7 +331,7 @@ namespace OpenApiQuery.Parsing
             var left = Additive();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
             {
-                var op = (string) TokenData;
+                var op = (string)TokenData;
 
                 ExpressionType? expression = null;
                 switch (op.ToLowerInvariant())
@@ -408,7 +426,7 @@ namespace OpenApiQuery.Parsing
             var left = Multiplicative();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
             {
-                var op = (string) TokenData;
+                var op = (string)TokenData;
 
                 var expression = op.ToLowerInvariant() switch
                 {
@@ -437,7 +455,7 @@ namespace OpenApiQuery.Parsing
             var left = Unary();
             while (CurrentTokenKind == QueryExpressionTokenKind.Keyword)
             {
-                var op = (string) TokenData;
+                var op = (string)TokenData;
 
                 var expression = op.ToLowerInvariant() switch
                 {
@@ -583,7 +601,7 @@ namespace OpenApiQuery.Parsing
         {
             switch (CurrentTokenKind)
             {
-                case QueryExpressionTokenKind.Keyword when (string) TokenData == "not":
+                case QueryExpressionTokenKind.Keyword when (string)TokenData == "not":
                 {
                     NextToken();
                     var unary = Unary();
@@ -622,7 +640,7 @@ namespace OpenApiQuery.Parsing
             switch (CurrentTokenKind)
             {
                 case QueryExpressionTokenKind.Identifier:
-                    var identifier = (string) TokenData;
+                    var identifier = (string)TokenData;
                     NextToken();
 
                     // function call
@@ -651,6 +669,7 @@ namespace OpenApiQuery.Parsing
                             ReportError("Missing close parenthesis after function call");
                             return null;
                         }
+
                         NextToken();
 
                         return BindFunctionCall(identifier, arguments);
@@ -726,7 +745,6 @@ namespace OpenApiQuery.Parsing
         }
 
 
-
         private Expression BindFunctionCall(string identifier, List<Expression> arguments)
         {
             try
@@ -738,6 +756,7 @@ namespace OpenApiQuery.Parsing
                 throw new ParseException(e.Message, Position, e);
             }
         }
+
         public static bool IsNumeric(QueryExpressionTokenKind currentQueryExpressionTokenKind)
         {
             return currentQueryExpressionTokenKind switch
