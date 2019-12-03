@@ -90,7 +90,7 @@ namespace OpenApiQuery
             SelectClause selectClause,
             IDictionary<PropertyInfo, ExpandClause> expands)
         {
-            var arg = Expression.Parameter(itemType);
+            var arg = Expression.Parameter(itemType, "arg");
             var body = BuildMemberInit(itemType, arg, selectClause, expands);
             var funcType = typeof(Func<,>).MakeGenericType(itemType, itemType);
 
@@ -135,7 +135,7 @@ namespace OpenApiQuery
                 {
                     // navigation properties that are not expanded, are not loaded
                     // Prop1 = null
-                    memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
+                    //memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
                 }
                 else if (selectAllProperties || select.SelectClauses.ContainsKey(property))
                 {
