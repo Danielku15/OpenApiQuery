@@ -5,18 +5,18 @@ using OpenApiQuery.Parsing;
 
 namespace OpenApiQuery.Serialization.SystemText
 {
-    public class OpenApiQueryApplyResultConverter<T> : JsonConverter<OpenApiQueryApplyResult<T>>
+    public class OpenApiQueryResultConverter<T> : JsonConverter<OpenApiQueryResult<T>>
     {
         private const string ResultCountPropertyName = "@odata.count";
         private const string ResultValuesPropertyName = "value";
         private readonly IOpenApiTypeHandler _typeHandler;
 
-        public OpenApiQueryApplyResultConverter(IOpenApiTypeHandler typeHandler)
+        public OpenApiQueryResultConverter(IOpenApiTypeHandler typeHandler)
         {
             _typeHandler = typeHandler;
         }
 
-        public override OpenApiQueryApplyResult<T> Read(
+        public override OpenApiQueryResult<T> Read(
             ref Utf8JsonReader reader,
             Type typeToConvert,
             JsonSerializerOptions options)
@@ -29,7 +29,7 @@ namespace OpenApiQuery.Serialization.SystemText
             var actualClrType = typeof(T);
             var actualType = _typeHandler.ResolveType(actualClrType);
 
-            var result = new OpenApiQueryApplyResult<T>();
+            var result = new OpenApiQueryResult<T>();
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
@@ -94,7 +94,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
         public override void Write(
             Utf8JsonWriter writer,
-            OpenApiQueryApplyResult<T> value,
+            OpenApiQueryResult<T> value,
             JsonSerializerOptions options)
         {
             writer.WriteStartObject();

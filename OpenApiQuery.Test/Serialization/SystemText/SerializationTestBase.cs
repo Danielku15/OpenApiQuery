@@ -19,7 +19,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                 Converters =
                 {
                     new OpenApiQueryDeltaConverterFactory(typeHandler),
-                    new OpenApiQueryResultConverterFactory(typeHandler)
+                    new OpenApiQueryResultConverterFactory(typeHandler),
+                    new OpenApiQuerySingleResultConverterFactory(typeHandler)
                 }
             };
 
@@ -36,7 +37,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                 Converters =
                 {
                     new OpenApiQueryDeltaConverterFactory(typeHandler),
-                    new OpenApiQueryResultConverterFactory(typeHandler)
+                    new OpenApiQueryResultConverterFactory(typeHandler),
+                    new OpenApiQuerySingleResultConverterFactory(typeHandler)
                 }
             };
 

@@ -1,16 +1,16 @@
 namespace OpenApiQuery
 {
-    public class OpenApiQueryApplyResult<T>
+    public class OpenApiQueryResult<T>
     {
         internal OpenApiQueryOptions<T> Options { get; set; }
         public long? TotalCount { get; set; }
         public T[] ResultItems { get; set; }
 
-        public OpenApiQueryApplyResult()
+        public OpenApiQueryResult()
         {
         }
 
-        internal OpenApiQueryApplyResult(OpenApiQueryOptions<T> options, T[] resultItems, long? totalCount)
+        internal OpenApiQueryResult(OpenApiQueryOptions<T> options, T[] resultItems, long? totalCount)
         {
             Options = options;
             ResultItems = resultItems;

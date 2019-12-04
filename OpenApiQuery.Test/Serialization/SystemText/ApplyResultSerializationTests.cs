@@ -11,7 +11,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Simple()
         {
-            var actual = new OpenApiQueryApplyResult<SimpleClass>
+            var actual = new OpenApiQueryResult<SimpleClass>
             {
                 TotalCount = 2,
                 ResultItems = new[]
@@ -55,7 +55,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Polymorphic()
         {
-            var actual = new OpenApiQueryApplyResult<Base>
+            var actual = new OpenApiQueryResult<Base>
             {
                 TotalCount = 2,
                 ResultItems = new Base[]
@@ -101,7 +101,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_ObjectArrays()
         {
-            var actual = new OpenApiQueryApplyResult<ArrayWrapper<SimpleClass>>
+            var actual = new OpenApiQueryResult<ArrayWrapper<SimpleClass>>
             {
                 TotalCount = 4,
                 ResultItems = new[]
@@ -193,7 +193,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_ObjectArrays_Polymorphic()
         {
-            var actual = new OpenApiQueryApplyResult<ArrayWrapper<Base>>
+            var actual = new OpenApiQueryResult<ArrayWrapper<Base>>
             {
                 TotalCount = 4,
                 ResultItems = new[]
@@ -326,7 +326,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
 
         public void TestSerialize_NativeArrays<T>(T[][] items)
         {
-            var actual = new OpenApiQueryApplyResult<ArrayWrapper<T>>
+            var actual = new OpenApiQueryResult<ArrayWrapper<T>>
             {
                 TotalCount = 4,
                 ResultItems = items.Select(i => new ArrayWrapper<T>
@@ -348,7 +348,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Dictionary_SimpleTypes()
         {
-            var actual = new OpenApiQueryApplyResult<Dictionary<string, int>>
+            var actual = new OpenApiQueryResult<Dictionary<string, int>>
             {
                 TotalCount = 2,
                 ResultItems = new[]
@@ -392,7 +392,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialProperties()
         {
-            var actual = new OpenApiQueryApplyResult<SimpleClass>
+            var actual = new OpenApiQueryResult<SimpleClass>
             {
                 Options = new OpenApiQueryOptions<SimpleClass>
                 {
@@ -449,7 +449,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialNavigationProperties_Single()
         {
-            var actual = new OpenApiQueryApplyResult<SimpleNavigation>
+            var actual = new OpenApiQueryResult<SimpleNavigation>
             {
                 Options = new OpenApiQueryOptions<SimpleNavigation>
                 {
@@ -555,7 +555,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialNavigationProperties_Collection()
         {
-            var actual = new OpenApiQueryApplyResult<CollectionNavigation>
+            var actual = new OpenApiQueryResult<CollectionNavigation>
             {
                 Options = new OpenApiQueryOptions<CollectionNavigation>
                 {
