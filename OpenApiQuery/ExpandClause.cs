@@ -135,7 +135,7 @@ namespace OpenApiQuery
                 {
                     // navigation properties that are not expanded, are not loaded
                     // Prop1 = null
-                    //memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
+                    memberBindings.Add(Expression.Bind(property, Expression.Constant(null, property.PropertyType)));
                 }
                 else if (selectAllProperties || select.SelectClauses.ContainsKey(property))
                 {
