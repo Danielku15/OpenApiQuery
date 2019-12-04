@@ -6,21 +6,11 @@ using OpenApiQuery.Sample.Models;
 
 namespace OpenApiQuery.Sample.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class BlogsController : Controller
+    public class BlogsController : OpenApiController<Blog>
     {
-        private readonly BlogDbContext _context;
-
         public BlogsController(BlogDbContext context)
+            : base(context, context.Blogs)
         {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAsync(OpenApiQueryOptions<Blog> queryOptions, CancellationToken cancellationToken)
-        {
-            return Ok(await queryOptions.ApplyToAsync(_context.Blogs, cancellationToken));
         }
     }
 }

@@ -20,12 +20,13 @@ namespace OpenApiQuery.Test
                 Converters =
                 {
                     new OpenApiQueryDeltaConverterFactory(TypeHandler),
-                    new OpenApiQueryResultConverterFactory(TypeHandler)
+                    new OpenApiQueryResultConverterFactory(TypeHandler),
+                    new OpenApiQuerySingleResultConverterFactory(TypeHandler)
                 }
             }
         };
 
-        public static async Task<OpenApiQueryApplyResult<T>> GetQueryAsync<T>(
+        public static async Task<OpenApiQueryResult<T>> GetQueryAsync<T>(
             this HttpClient client,
             string requestUri,
             CancellationToken cancellationToken = default)
@@ -36,7 +37,29 @@ namespace OpenApiQuery.Test
             await using var json = await response.Content.ReadAsStreamAsync();
             try
             {
-                return await JsonSerializer.DeserializeAsync<OpenApiQueryApplyResult<T>>(json,
+                return await JsonSerializer.DeserializeAsync<OpenApiQueryResult<T>>(json,
+                    Options.JsonSerializerOptions,
+                    cancellationToken);
+            }
+            catch (JsonException e)
+            {
+                var jsonText = await response.Content.ReadAsStringAsync();
+                Assert.Fail($"Failed to deserialize JSON: '{jsonText}', {e}");
+                throw;
+            }
+        }
+        public static async Task<OpenApiQuerySingleResult<T>> GetSingleQueryAsync<T>(
+            this HttpClient client,
+            string requestUri,
+            CancellationToken cancellationToken = default)
+        {
+            using var response = await client.GetAsync(requestUri, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            await using var json = await response.Content.ReadAsStreamAsync();
+            try
+            {
+                return await JsonSerializer.DeserializeAsync<OpenApiQuerySingleResult<T>>(json,
                     Options.JsonSerializerOptions,
                     cancellationToken);
             }

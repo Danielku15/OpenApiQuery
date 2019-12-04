@@ -6,11 +6,11 @@ using OpenApiQuery.Utils;
 
 namespace OpenApiQuery.Serialization.SystemText
 {
-    public class OpenApiQueryResultConverterFactory : JsonConverterFactory
+    public class OpenApiQuerySingleResultConverterFactory : JsonConverterFactory
     {
         private readonly IOpenApiTypeHandler _typeHandler;
 
-        public OpenApiQueryResultConverterFactory(IOpenApiTypeHandler typeHandler)
+        public OpenApiQuerySingleResultConverterFactory(IOpenApiTypeHandler typeHandler)
         {
             _typeHandler = typeHandler;
         }
@@ -18,7 +18,7 @@ namespace OpenApiQuery.Serialization.SystemText
         public override bool CanConvert(Type typeToConvert)
         {
             return typeToConvert.IsGenericType &&
-                   typeToConvert.GetGenericTypeDefinition() == typeof(OpenApiQueryResult<>);
+                   typeToConvert.GetGenericTypeDefinition() == typeof(OpenApiQuerySingleResult<>);
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -28,13 +28,13 @@ namespace OpenApiQuery.Serialization.SystemText
 
         private JsonConverter CreateConverter<T>()
         {
-            return new OpenApiQueryResultConverter<T>(_typeHandler);
+            return new OpenApiQuerySingleResultConverter<T>(_typeHandler);
         }
 
         private static readonly
-            GenericMethodCallHelper<OpenApiQueryResultConverterFactory, JsonConverter>
+            GenericMethodCallHelper<OpenApiQuerySingleResultConverterFactory, JsonConverter>
             CreateConverterOfT =
-                new GenericMethodCallHelper<OpenApiQueryResultConverterFactory, JsonConverter>(
+                new GenericMethodCallHelper<OpenApiQuerySingleResultConverterFactory, JsonConverter>(
                     x => x.CreateConverter<object>()
                 );
     }

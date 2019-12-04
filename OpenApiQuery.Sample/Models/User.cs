@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OpenApiQuery.Sample.Models
 {
-    public class User
+    public class User : IEntity
     {
         [Key]
         [Required]

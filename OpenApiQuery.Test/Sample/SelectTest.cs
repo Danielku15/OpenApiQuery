@@ -71,8 +71,16 @@ namespace OpenApiQuery.Test.Sample
                     Username = "A",
                     Blogs = new List<Blog>
                     {
-                        new Blog {Name = "A1", Description = "A1_Desc"},
-                        new Blog {Name = "A2", Description = "A2_Desc"}
+                        new Blog
+                        {
+                            Name = "A1",
+                            Description = "A1_Desc"
+                        },
+                        new Blog
+                        {
+                            Name = "A2",
+                            Description = "A2_Desc"
+                        }
                     }
                 }
             });
@@ -129,8 +137,16 @@ namespace OpenApiQuery.Test.Sample
                     Username = "A",
                     Blogs = new List<Blog>
                     {
-                        new Blog {Name = "A1", Description = "A1_Desc"},
-                        new Blog {Name = "A2", Description = "A2_Desc"}
+                        new Blog
+                        {
+                            Name = "A1",
+                            Description = "A1_Desc"
+                        },
+                        new Blog
+                        {
+                            Name = "A2",
+                            Description = "A2_Desc"
+                        }
                     }
                 }
             });
@@ -159,7 +175,11 @@ namespace OpenApiQuery.Test.Sample
                     EMail = "C",
                     Blogs = new List<Blog>
                     {
-                        new Blog {Name = "A1", Description = "A1_Desc"}
+                        new Blog
+                        {
+                            Name = "A1",
+                            Description = "A1_Desc"
+                        }
                     }
                 }
             });
@@ -185,8 +205,16 @@ namespace OpenApiQuery.Test.Sample
                     Username = "A",
                     Blogs = new List<Blog>
                     {
-                        new Blog {Name = "A1", Description = "A1_Desc"},
-                        new Blog {Name = "A2", Description = "A2_Desc"}
+                        new Blog
+                        {
+                            Name = "A1",
+                            Description = "A1_Desc"
+                        },
+                        new Blog
+                        {
+                            Name = "A2",
+                            Description = "A2_Desc"
+                        }
                     }
                 }
             });
@@ -208,6 +236,83 @@ namespace OpenApiQuery.Test.Sample
                 Assert.AreEqual("name",
                     string.Join(",", item.EnumerateObject().Select(o => o.Name.ToLowerInvariant())));
             }
+        }
+
+        [TestMethod]
+        public async Task TestExpand_WithExpand_SingleCollectionProperty()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog
+                        {
+                            Name = "A"
+                        },
+                        new Blog
+                        {
+                            Name = "B"
+                        },
+                        new Blog
+                        {
+                            Name = "C"
+                        },
+                        new Blog
+                        {
+                            Name = "D"
+                        }
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetSingleQueryAsync<User>("/users/1?$expand=blogs");
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItem.Blogs.Select(u => u.Name)));
+        }
+
+        [TestMethod]
+        public async Task TestExpand_WithExpand_NestedCollectionProperty()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog
+                        {
+                            Name = "A",
+                            Posts = Enumerable.Range(1, 1).Select(i => new BlogPost()).ToArray()
+                        },
+                        new Blog
+                        {
+                            Name = "B",
+                            Posts = Enumerable.Range(1, 2).Select(i => new BlogPost()).ToArray()
+                        },
+                        new Blog
+                        {
+                            Name = "C",
+                            Posts = Enumerable.Range(1, 3).Select(i => new BlogPost()).ToArray()
+                        },
+                        new Blog
+                        {
+                            Name = "D",
+                            Posts = Enumerable.Range(1, 4).Select(i => new BlogPost()).ToArray()
+                        }
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetSingleQueryAsync<User>("/users/1?$expand=blogs($expand=posts)");
+            Assert.IsNotNull(response.ResultItem.Blogs);
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItem.Blogs.Select(u => u.Name)));
+            Assert.AreEqual(1, response.ResultItem.Blogs.ElementAt(0).Posts.Count);
+            Assert.AreEqual(2, response.ResultItem.Blogs.ElementAt(1).Posts.Count);
+            Assert.AreEqual(3, response.ResultItem.Blogs.ElementAt(2).Posts.Count);
+            Assert.AreEqual(4, response.ResultItem.Blogs.ElementAt(3).Posts.Count);
         }
     }
 }

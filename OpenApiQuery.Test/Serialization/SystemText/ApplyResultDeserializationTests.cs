@@ -10,7 +10,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestDeserialize_Simple()
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<SimpleClass>>(@"
+            var objects = Deserialize<OpenApiQueryResult<SimpleClass>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -43,7 +43,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [Ignore("Polymorphic deserialization is not yet supported")]
         public void TestSerialize_Polymorphic()
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<Base>>(@"
+            var objects = Deserialize<OpenApiQueryResult<Base>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -81,7 +81,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestDeserialize_ObjectArrays()
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<ArrayWrapper<SimpleClass>>>(@"
+            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<SimpleClass>>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -142,7 +142,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [Ignore("Polymorphic deserialization not working yet")]
         public void TestDeserialize_ObjectArrays_Polymorphic()
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<ArrayWrapper<Base>>>(@"
+            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<Base>>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -269,7 +269,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
 
         private void TestDeserialize_NativeArrays<T>(string json, T[][] expected)
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<ArrayWrapper<T>>>(json);
+            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<T>>>(json);
 
             Assert.AreEqual(expected.Length, objects.ResultItems.Length);
 
@@ -286,7 +286,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Dictionary_SimpleTypes()
         {
-            var objects = Deserialize<OpenApiQueryApplyResult<Dictionary<string, int>>>(@"{
+            var objects = Deserialize<OpenApiQueryResult<Dictionary<string, int>>>(@"{
                 ""value"": [
                     { ""A"": 1, ""b"": 2, ""C"": 3 },
                     { ""d"": 4, ""E"": 5, ""F"": 6 }

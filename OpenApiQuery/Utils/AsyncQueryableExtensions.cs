@@ -12,6 +12,11 @@ namespace OpenApiQuery.Utils
             return Task.FromResult(queryable.ToArray());
         }
 
+        public static Task<T> SingleOrDefaultAsync<T>(this IQueryable<T> queryable, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(queryable.SingleOrDefault());
+        }
+
         public static Task<long> LongCountAsync<T>(this IQueryable<T> queryable, CancellationToken cancellationToken)
         {
             return Task.FromResult(queryable.LongCount());
