@@ -37,6 +37,13 @@ namespace OpenApiQuery.Utils
 
         public static bool IsEnumerable(Type type, out Type itemType)
         {
+            // handle string as non enumerable even though it is enumerable<char>
+            if (type == typeof(string))
+            {
+                itemType = null;
+                return false;
+            }
+
             // 1:many
             if (type.IsGenericType &&
                 typeof(IEnumerable<>).MakeGenericType(type.GetGenericArguments()[0])
