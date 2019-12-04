@@ -199,7 +199,7 @@ namespace OpenApiQuery.Test.Sample
             var resultItems = document.RootElement.GetProperty("value");
 
             var user = resultItems.EnumerateArray().First();
-            var blogs = user.GetProperty("Blogs");
+            var blogs = user.GetProperty("blogs");
 
             Assert.AreEqual(2, blogs.GetArrayLength());
 

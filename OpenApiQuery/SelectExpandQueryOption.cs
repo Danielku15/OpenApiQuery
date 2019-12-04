@@ -24,6 +24,10 @@ namespace OpenApiQuery
         {
             _expandClauses = new Dictionary<PropertyInfo, ExpandClause>();
             _parameter = Expression.Parameter(elementType);
+            RootSelectClause = new SelectClause
+            {
+                IsStarSelect = true
+            };
         }
 
         public IQueryable<T> ApplyTo<T>(IQueryable<T> queryable)
@@ -291,7 +295,7 @@ namespace OpenApiQuery
                         default:
                             handler = null;
                             break;
-                    };
+                    }
 
                     if (handler != null)
                     {

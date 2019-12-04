@@ -1,24 +1,41 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace OpenApiQuery.Parsing
 {
     public class OpenApiType : IOpenApiType
     {
+        private readonly IDictionary<string, IOpenApiTypeProperty> _propertiesByName;
+        private readonly IDictionary<PropertyInfo, IOpenApiTypeProperty> _propertiesByClr;
+
         public Type ClrType { get; }
         public string JsonName { get; }
-        public IDictionary<string, IOpenApiTypeProperty> Properties { get; }
 
-        public bool TryGetProperty(string propertyName, out IOpenApiTypeProperty property)
-        {
-            return Properties.TryGetValue(propertyName, out property);
-        }
+        public IEnumerable<IOpenApiTypeProperty> Properties => _propertiesByName.Values;
 
         public OpenApiType(Type clrType, string jsonName)
         {
             ClrType = clrType;
             JsonName = jsonName;
-            Properties = new Dictionary<string, IOpenApiTypeProperty>(StringComparer.InvariantCultureIgnoreCase);
+            _propertiesByName = new Dictionary<string, IOpenApiTypeProperty>(StringComparer.InvariantCultureIgnoreCase);
+            _propertiesByClr = new Dictionary<PropertyInfo, IOpenApiTypeProperty>();
+        }
+
+        public void RegisterProperty(IOpenApiTypeProperty property)
+        {
+            _propertiesByName[property.JsonName] = property;
+            _propertiesByClr[property.ClrProperty] = property;
+        }
+
+        public bool TryGetProperty(PropertyInfo clrProperty, out IOpenApiTypeProperty property)
+        {
+            return _propertiesByClr.TryGetValue(clrProperty, out property);
+        }
+
+        public bool TryGetProperty(string propertyName, out IOpenApiTypeProperty property)
+        {
+            return _propertiesByName.TryGetValue(propertyName, out property);
         }
 
         public bool Equals(IOpenApiType other)
@@ -33,7 +50,7 @@ namespace OpenApiQuery.Parsing
                 return true;
             }
 
-            return Equals(ClrType, other.ClrType);
+            return ClrType == other.ClrType;
         }
 
         public override bool Equals(object obj)

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenApiQuery.Parsing;
-using OpenApiQuery.Serialization;
 using OpenApiQuery.Serialization.SystemText;
 
 namespace OpenApiQuery
@@ -17,7 +16,8 @@ namespace OpenApiQuery
 
         public void Configure(JsonOptions options)
         {
-            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryConverterFactory(_typeHandler));
+            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryResultConverterFactory(_typeHandler));
+            options.JsonSerializerOptions.Converters.Insert(0, new OpenApiQueryDeltaConverterFactory(_typeHandler));
         }
     }
 }

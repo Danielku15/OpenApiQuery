@@ -11,7 +11,8 @@ namespace OpenApiQuery.Parsing
 {
     public class DefaultOpenApiTypeHandler : IOpenApiTypeHandler
     {
-        private readonly ConcurrentDictionary<Type, IOpenApiType> _typeCache = new ConcurrentDictionary<Type, IOpenApiType>();
+        private readonly ConcurrentDictionary<Type, IOpenApiType> _typeCache =
+            new ConcurrentDictionary<Type, IOpenApiType>();
 
         public IOpenApiType ResolveType(Type clrType)
         {
@@ -38,18 +39,21 @@ namespace OpenApiQuery.Parsing
             {
                 var it = Expression.Parameter(typeof(object), "it");
                 var get = Expression.Lambda<Func<object, object>>(
-                    Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(it, clrType), property), typeof(object)),
+                    Expression.Convert(Expression.MakeMemberAccess(Expression.Convert(it, clrType), property),
+                        typeof(object)),
                     it
                 ).Compile();
 
                 var value = Expression.Parameter(typeof(object), "value");
                 var set = Expression.Lambda<Action<object, object>>(
-                    Expression.Assign(Expression.MakeMemberAccess(Expression.Convert(it, clrType), property), Expression.Convert(value, property.PropertyType)),
-                    it, value
+                    Expression.Assign(Expression.MakeMemberAccess(Expression.Convert(it, clrType), property),
+                        Expression.Convert(value, property.PropertyType)),
+                    it,
+                    value
                 ).Compile();
 
                 var jsonName = property.Name;
-                apiType.Properties[jsonName] = new OpenApiTypeProperty(property, jsonName, property.PropertyType, get, set);
+                apiType.RegisterProperty(new OpenApiTypeProperty(property, jsonName, property.PropertyType, get, set));
             }
 
             return apiType;
@@ -103,12 +107,13 @@ namespace OpenApiQuery.Parsing
             ReflectionHelper.GetMethod<IEnumerable<object>, bool>(x => x.Contains(null));
 
         private static readonly PropertyInfo StringLength =
-            (PropertyInfo) ReflectionHelper.GetMember<string, int>(x => x.Length);
+            (PropertyInfo)ReflectionHelper.GetMember<string, int>(x => x.Length);
 
         private static readonly MethodInfo EnumerableCount =
             ReflectionHelper.GetMethod<IEnumerable<object>, int>(x => x.Count());
 
-        public Expression BindFunctionCall(string identifier,
+        public Expression BindFunctionCall(
+            string identifier,
             List<Expression> arguments)
         {
             switch (identifier)
@@ -178,13 +183,16 @@ namespace OpenApiQuery.Parsing
 
                     if (arguments.Count == 2)
                     {
-                        return Expression.Call(arguments[0], StringSubstringOneParam,
+                        return Expression.Call(arguments[0],
+                            StringSubstringOneParam,
                             arguments[1]);
                     }
                     else
                     {
-                        return Expression.Call(arguments[0], StringSubstringTwoParam,
-                            arguments[1], arguments[2]);
+                        return Expression.Call(arguments[0],
+                            StringSubstringTwoParam,
+                            arguments[1],
+                            arguments[2]);
                     }
                 case "matchesPattern":
                     break;
@@ -215,6 +223,5 @@ namespace OpenApiQuery.Parsing
 
             return null;
         }
-
     }
 }
