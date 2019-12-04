@@ -46,6 +46,12 @@ namespace OpenApiQuery.Utils
                 return true;
             }
 
+            if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
+            {
+                itemType = typeof(object);
+                return true;
+            }
+
             itemType = null;
             return false;
         }

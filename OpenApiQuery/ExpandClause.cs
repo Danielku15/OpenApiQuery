@@ -90,7 +90,7 @@ namespace OpenApiQuery
             SelectClause selectClause,
             IDictionary<PropertyInfo, ExpandClause> expands)
         {
-            var arg = Expression.Parameter(itemType);
+            var arg = Expression.Parameter(itemType, "arg");
             var body = BuildMemberInit(itemType, arg, selectClause, expands);
             var funcType = typeof(Func<,>).MakeGenericType(itemType, itemType);
 
