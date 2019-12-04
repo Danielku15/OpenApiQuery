@@ -99,7 +99,7 @@ namespace OpenApiQuery.Test.Sample
             });
             using var client = server.CreateClient();
 
-            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($filter=startsWith(name, 'Match'))");
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($filter=startswith(name, 'Match'))");
             Assert.AreEqual(1, response.ResultItems.Length);
             Assert.IsNotNull(response.ResultItems[0].Blogs);
             Assert.AreEqual("Match1,Match2,Match5",
@@ -125,7 +125,7 @@ namespace OpenApiQuery.Test.Sample
             });
             using var client = server.CreateClient();
 
-            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($filter=startsWith(name, 'Match');$orderby=name desc;$skip=1;$top=2)");
+            var response = await client.GetQueryAsync<User>("/users?$expand=blogs($filter=startswith(name, 'Match');$orderby=name desc;$skip=1;$top=2)");
             Assert.AreEqual(1, response.ResultItems.Length);
             Assert.IsNotNull(response.ResultItems[0].Blogs);
             Assert.AreEqual("Match2,Match1",
@@ -181,7 +181,7 @@ namespace OpenApiQuery.Test.Sample
             Assert.AreEqual("D,C",
                 string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
         }
-        
+
         [TestMethod]
         public async Task TestExpand_WithExpand_ExpandSkip()
         {

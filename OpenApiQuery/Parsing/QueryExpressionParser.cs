@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -113,7 +114,7 @@ namespace OpenApiQuery.Parsing
                 }
                 else
                 {
-                    var token = ReadFullToken();
+                    var token = ReadFullToken(out var specialChars);
 
                     switch (token)
                     {
@@ -151,50 +152,74 @@ namespace OpenApiQuery.Parsing
                             CurrentTokenKind = QueryExpressionTokenKind.Keyword;
                             break;
                         default:
-                            if (DateTimeOffset.TryParse(token,
-                                CultureInfo.InvariantCulture,
-                                DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind |
-                                DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite,
-                                out var dateTimeOffset))
+                            if (specialChars.HasFlag(ContainedCharTypes.SpecialChars))
                             {
-                                TokenData = dateTimeOffset;
-                                CurrentTokenKind = QueryExpressionTokenKind.DateTimeOffsetLiteral;
-                            }
-                            else if (Guid.TryParse(token, out var guid))
-                            {
-                                TokenData = guid;
-                                CurrentTokenKind = QueryExpressionTokenKind.GuidLiteral;
-                            }
-                            else if (long.TryParse(token,
-                                NumberStyles.Integer,
-                                CultureInfo.InvariantCulture,
-                                out var integer))
-                            {
-                                if (integer >= int.MinValue && integer <= int.MaxValue)
+                                if (DateTimeOffset.TryParse(token,
+                                    CultureInfo.InvariantCulture,
+                                    DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind |
+                                    DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite,
+                                    out var dateTimeOffset))
                                 {
-                                    TokenData = (int)integer;
-                                    CurrentTokenKind = QueryExpressionTokenKind.IntegerLiteral;
+                                    TokenData = dateTimeOffset;
+                                    CurrentTokenKind = QueryExpressionTokenKind.DateTimeOffsetLiteral;
+                                }
+                                else if (Guid.TryParse(token, out var guid))
+                                {
+                                    TokenData = guid;
+                                    CurrentTokenKind = QueryExpressionTokenKind.GuidLiteral;
                                 }
                                 else
                                 {
-                                    TokenData = integer;
-                                    CurrentTokenKind = QueryExpressionTokenKind.LongLiteral;
+                                    TokenData = token;
+                                    CurrentTokenKind = QueryExpressionTokenKind.Identifier;
                                 }
                             }
-                            else if (double.TryParse(token,
-                                NumberStyles.Float,
-                                CultureInfo.InvariantCulture,
-                                out var floating))
+                            else if ((specialChars & ~(ContainedCharTypes.LeadingDash | ContainedCharTypes.Digits)) == 0)
                             {
-                                if (floating >= float.MinValue && floating <= float.MaxValue)
+                                if (long.TryParse(token,
+                                    NumberStyles.Integer,
+                                    CultureInfo.InvariantCulture,
+                                    out var integer))
                                 {
-                                    TokenData = (int)floating;
-                                    CurrentTokenKind = QueryExpressionTokenKind.SingleLiteral;
+                                    if (integer >= int.MinValue && integer <= int.MaxValue)
+                                    {
+                                        TokenData = (int)integer;
+                                        CurrentTokenKind = QueryExpressionTokenKind.IntegerLiteral;
+                                    }
+                                    else
+                                    {
+                                        TokenData = integer;
+                                        CurrentTokenKind = QueryExpressionTokenKind.LongLiteral;
+                                    }
                                 }
                                 else
                                 {
-                                    TokenData = floating;
-                                    CurrentTokenKind = QueryExpressionTokenKind.DoubleLiteral;
+                                    TokenData = token;
+                                    CurrentTokenKind = QueryExpressionTokenKind.Identifier;
+                                }
+                            }
+                            else if ((specialChars & ~(ContainedCharTypes.LeadingDash | ContainedCharTypes.Digits | ContainedCharTypes.Dot | ContainedCharTypes.Exponent)) == 0)
+                            {
+                                if (double.TryParse(token,
+                                    NumberStyles.Float,
+                                    CultureInfo.InvariantCulture,
+                                    out var floating))
+                                {
+                                    if (floating >= float.MinValue && floating <= float.MaxValue)
+                                    {
+                                        TokenData = (float)floating;
+                                        CurrentTokenKind = QueryExpressionTokenKind.SingleLiteral;
+                                    }
+                                    else
+                                    {
+                                        TokenData = floating;
+                                        CurrentTokenKind = QueryExpressionTokenKind.DoubleLiteral;
+                                    }
+                                }
+                                else
+                                {
+                                    TokenData = token;
+                                    CurrentTokenKind = QueryExpressionTokenKind.Identifier;
                                 }
                             }
                             else
@@ -219,16 +244,57 @@ namespace OpenApiQuery.Parsing
             '.'
         };
 
-        private string ReadFullToken()
+
+        [Flags]
+        private enum ContainedCharTypes
+        {
+            None = 0,
+            Digits = 1,
+            Letters = 2,
+            Dot = 4,
+            LeadingDash = 8,
+            SpecialChars = 16,
+            Exponent = 32
+        }
+
+        private string ReadFullToken(out ContainedCharTypes charTypes)
         {
             var startPos = Position;
+            charTypes = ContainedCharTypes.None;
             while (Position < _value.Length)
             {
                 var ch = _currentCharacter;
-                if (char.IsLetterOrDigit(ch) || FullTokenAllowedChars.Contains(ch))
+                // TODO: full proper scientific number parsing
+                if ((ch == 'e' || ch == 'E' || ch =='+') &&
+                    (charTypes & ~(ContainedCharTypes.Digits | ContainedCharTypes.Dot | ContainedCharTypes.Exponent)) == 0)
                 {
-                    // valid char, continue search for end
                     NextCharacter();
+                    charTypes |= ContainedCharTypes.Exponent;
+                }
+                else if (char.IsLetter(ch))
+                {
+                    NextCharacter();
+                    charTypes |= ContainedCharTypes.Letters;
+                }
+                else if (char.IsDigit(ch))
+                {
+                    NextCharacter();
+                    charTypes |= ContainedCharTypes.Digits;
+                }
+                else if (ch == '.')
+                {
+                    NextCharacter();
+                    charTypes |= ContainedCharTypes.Dot;
+                }
+                else if (ch == '-' && startPos == Position)
+                {
+                    NextCharacter();
+                    charTypes |= ContainedCharTypes.LeadingDash;
+                }
+                else if (FullTokenAllowedChars.Contains(ch))
+                {
+                    NextCharacter();
+                    charTypes |= ContainedCharTypes.SpecialChars;
                 }
                 else
                 {
@@ -402,15 +468,39 @@ namespace OpenApiQuery.Parsing
                 expressions.Add(expr);
             }
 
-            if (CurrentTokenKind != QueryExpressionTokenKind.OpenBracket)
+            if (CurrentTokenKind != QueryExpressionTokenKind.CloseBracket)
             {
                 ReportError($"Expected close bracket at position {Position}");
             }
 
             NextToken();
 
+            if (itemType == null)
+            {
+                itemType = InferTypeFromValues(expressions);
+            }
 
             return Expression.NewArrayInit(itemType, expressions.Select(e => Promote(e, itemType)));
+        }
+
+        private Type InferTypeFromValues(List<Expression> expressions)
+        {
+            if (expressions.Count == 0)
+            {
+                return typeof(object);
+            }
+
+            var type = expressions[0].Type;
+            foreach (var expression in expressions.Skip(1))
+            {
+                if (!type.IsAssignableFrom(expression.Type) && !TypeDescriptor.GetConverter(expression.Type).CanConvertTo(type))
+                {
+                    // todo: try to find common base type? check how c# compiler does it!
+                    return typeof(object);
+                }
+            }
+
+            return type;
         }
 
         private static readonly MethodInfo HasFlagMethodInfo =
@@ -488,6 +578,11 @@ namespace OpenApiQuery.Parsing
         private static Expression Promote(Expression toPromote, Type otherType)
         {
             // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions#implicit-numeric-conversions
+            if (toPromote.Type.IsValueType && otherType == typeof(object))
+            {
+                return Expression.Convert(toPromote, otherType);
+            }
+
             if (toPromote.Type == typeof(sbyte))
             {
                 if (otherType == typeof(short) ||
@@ -625,7 +720,7 @@ namespace OpenApiQuery.Parsing
 
         private Expression Primary()
         {
-            var expression = Segment(_thisValues.Peek());
+            var expression = Segment();
             while (CurrentTokenKind == QueryExpressionTokenKind.Slash)
             {
                 NextToken();
@@ -635,7 +730,7 @@ namespace OpenApiQuery.Parsing
             return expression;
         }
 
-        private Expression Segment(Expression expression)
+        private Expression Segment(Expression expression = null)
         {
             switch (CurrentTokenKind)
             {
@@ -676,17 +771,87 @@ namespace OpenApiQuery.Parsing
                     }
                     else
                     {
+                        if (expression == null)
+                        {
+                            expression = _thisValues.Count == 0 ? null : _thisValues.Peek();
+                        }
+
                         var member = BindMember(expression, identifier);
-                        return Expression.MakeMemberAccess(expression, member);
+                        if (member != null)
+                        {
+                            return Expression.MakeMemberAccess(expression, member);
+                        }
+
+                        //  fallback to type name
+                        var builtInType = GetBuiltInTypeByName(identifier);
+                        if (builtInType != null)
+                        {
+                            return Expression.Constant(builtInType);
+                        }
+
+                        // fallback to API type name
+                        var apiType = _binder.ResolveType(identifier);
+                        if (apiType != null)
+                        {
+                            return Expression.Constant(apiType.ClrType);
+                        }
+
+                        throw new BindException($"Could not bind member '{identifier}'");
                     }
 
                 case QueryExpressionTokenKind.OpenParenthesis:
                     return Parenthsis();
+                case QueryExpressionTokenKind.OpenBracket:
+                    return List(null);
                 default:
                     return Literal();
             }
         }
 
+        public static Type GetBuiltInTypeByName(string typeName)
+        {
+            // primitiveTypeName
+            if (typeName.StartsWith("Edm."))
+            {
+                typeName = typeName.Substring(4);
+            }
+
+            switch (typeName)
+            {
+                case "Boolean":
+                    return typeof(bool);
+                case "Byte":
+                    return typeof(byte);
+                case "Date":
+                    return typeof(DateTime);
+                case "DateTimeOffset":
+                    return typeof(DateTimeOffset);
+                case "Decimal":
+                    return typeof(decimal);
+                case "Double":
+                    return typeof(double);
+                case "Duration":
+                    return typeof(TimeSpan);
+                case "Guid":
+                    return typeof(Guid);
+                case "Int16":
+                    return typeof(short);
+                case "Int32":
+                    return typeof(int);
+                case "Int64":
+                    return typeof(long);
+                case "SByte":
+                    return typeof(sbyte);
+                case "Single":
+                    return typeof(float);
+                case "String":
+                    return typeof(string);
+                case "TimeOfDay":
+                    return typeof(TimeSpan);
+            }
+
+            return null;
+        }
 
         private Expression Literal()
         {
@@ -707,7 +872,7 @@ namespace OpenApiQuery.Parsing
                     NextToken();
                     return Expression.Constant(null);
                 default:
-                    ReportError($"Unexpected expression at position {Position}");
+                    ReportError($"Unexpected expression at position {Position}: {CurrentTokenKind}");
                     return null;
             }
         }
