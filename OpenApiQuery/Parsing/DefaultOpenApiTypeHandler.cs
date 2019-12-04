@@ -84,6 +84,9 @@ namespace OpenApiQuery.Parsing
         private static readonly MethodInfo StringConcat =
             ReflectionHelper.GetMethod<object[], string>(x => string.Concat(x));
 
+        private static readonly MethodInfo EnumerableConcat =
+            ReflectionHelper.GetMethod<IEnumerable<object>, IEnumerable<object>>(x => x.Concat(new object[0]));
+
         private static readonly MethodInfo StringContains =
             ReflectionHelper.GetMethod<string, bool>(x => x.Contains(""));
 
@@ -120,12 +123,31 @@ namespace OpenApiQuery.Parsing
             {
                 // string functions
                 case "concat":
-                    if (arguments.Count != 0)
+                    if (arguments.Count == 0)
                     {
                         throw new BindException("concat needs at least 1 parameter");
                     }
 
-                    return Expression.Call(null, StringConcat, arguments);
+                    if (ReflectionHelper.IsEnumerable(arguments[0].Type, out var itemType))
+                    {
+                        var result = arguments[0];
+                        var concatMethod = EnumerableConcat.MakeGenericMethod(itemType);
+                        // ReSharper disable once LoopCanBeConvertedToQuery this one is clearer
+                        foreach (var arg in arguments.Skip(1))
+                        {
+                            result = Expression.Call(null, concatMethod, result, arg);
+                        }
+
+                        return result;
+                    }
+                    else if (arguments[0].Type == typeof(string))
+                    {
+                        return Expression.Call(null, StringConcat, Expression.NewArrayInit(typeof(object), arguments));
+                    }
+                    else
+                    {
+                        throw new BindException("concat needs either strings or enumerables for concatenation");
+                    }
                 case "contains":
                     if (arguments.Count != 2)
                     {
