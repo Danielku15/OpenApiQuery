@@ -50,7 +50,7 @@ namespace OpenApiQuery.Parsing
                 return true;
             }
 
-            return Equals(ClrType, other.ClrType);
+            return ClrType == other.ClrType;
         }
 
         public override bool Equals(object obj)

@@ -1,6 +1,5 @@
 using System;
 using System.Linq.Expressions;
-using System.Reflection.Metadata;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenApiQuery.Parsing;
 

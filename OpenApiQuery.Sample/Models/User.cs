@@ -30,8 +30,8 @@ namespace OpenApiQuery.Sample.Models
         [MinLength(ModelConstants.MinStringLength)]
         [MaxLength(ModelConstants.SmallStringLength)]
         public string EMail { get; set; }
-        
+
         [InverseProperty(nameof(Blog.Owner))]
-        public virtual ICollection<Blog> Blogs { get; set; }
+        public ICollection<Blog> Blogs { get; set; }
     }
 }

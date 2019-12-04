@@ -29,7 +29,7 @@ namespace OpenApiQuery
         internal HttpContext HttpContext { get; set; }
         internal ModelStateDictionary ModelState { get; set; }
 
-        public OpenApiQueryOptions(Type elementType)
+        protected OpenApiQueryOptions(Type elementType)
         {
             ElementType = elementType;
             SelectExpand = new SelectExpandQueryOption(ElementType);

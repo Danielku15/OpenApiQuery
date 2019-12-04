@@ -47,7 +47,7 @@ namespace OpenApiQuery.Serialization.SystemText
                     case ResultCountPropertyName:
                         if (!reader.Read())
                         {
-                            throw new JsonException($"Unexpected end of stream.");
+                            throw new JsonException("Unexpected end of stream.");
                         }
 
                         switch (reader.TokenType)
@@ -66,7 +66,7 @@ namespace OpenApiQuery.Serialization.SystemText
                     case ResultValuesPropertyName:
                         if (!reader.Read())
                         {
-                            throw new JsonException($"Unexpected end of stream.");
+                            throw new JsonException("Unexpected end of stream.");
                         }
 
                         switch (reader.TokenType)
@@ -89,7 +89,7 @@ namespace OpenApiQuery.Serialization.SystemText
                 }
             }
 
-            throw new JsonException($"Unexpected end of stream.");
+            throw new JsonException("Unexpected end of stream.");
         }
 
         public override void Write(

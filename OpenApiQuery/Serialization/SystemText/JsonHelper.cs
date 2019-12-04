@@ -233,7 +233,7 @@ namespace OpenApiQuery.Serialization.SystemText
         {
             if (reader.TokenType == JsonTokenType.StartArray && !reader.Read())
             {
-                throw new JsonException($"Unexpected end of stream.");
+                throw new JsonException("Unexpected end of stream.");
             }
 
             switch (reader.TokenType)
@@ -264,11 +264,6 @@ namespace OpenApiQuery.Serialization.SystemText
                 case JsonTokenType.False:
                     return ReadNativeArray(ref reader, itemClrType, options);
 
-
-                    // TODO: read array even though we already started it? we might need to do reading on our own
-                    // simple arrays
-                    return JsonSerializer.Deserialize(ref reader, itemClrType.MakeArrayType(), options);
-
                 case JsonTokenType.EndArray:
                     return Array.CreateInstance(itemClrType, 0);
 
@@ -296,7 +291,7 @@ namespace OpenApiQuery.Serialization.SystemText
                 resultItems.Add(JsonSerializer.Deserialize(ref reader, itemClrType, options));
             } while (reader.Read());
 
-            throw new JsonException($"Unexpected end of stream.");
+            throw new JsonException("Unexpected end of stream.");
         }
 
         private static object ReadObjectArray(
@@ -324,7 +319,7 @@ namespace OpenApiQuery.Serialization.SystemText
                 resultItems.Add(ReadValue(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
             } while (reader.Read());
 
-            throw new JsonException($"Unexpected end of stream.");
+            throw new JsonException("Unexpected end of stream.");
         }
 
         public static object ReadObject(
@@ -337,7 +332,7 @@ namespace OpenApiQuery.Serialization.SystemText
         {
             if (itemType == null)
             {
-                throw new JsonException($"Cannot deserialize unknown type.");
+                throw new JsonException("Cannot deserialize unknown type.");
             }
 
             // TODO: better object creation, and polymorphism handling!
@@ -390,7 +385,7 @@ namespace OpenApiQuery.Serialization.SystemText
                 }
             }
 
-            throw new JsonException($"Unexpected end of stream.");
+            throw new JsonException("Unexpected end of stream.");
         }
 
 
@@ -415,7 +410,7 @@ namespace OpenApiQuery.Serialization.SystemText
                 resultItems.Add(ReadArray(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
             } while (reader.Read());
 
-            throw new JsonException($"Unexpected end of stream.");
+            throw new JsonException("Unexpected end of stream.");
         }
     }
 }

@@ -295,7 +295,7 @@ namespace OpenApiQuery
                         default:
                             handler = null;
                             break;
-                    };
+                    }
 
                     if (handler != null)
                     {

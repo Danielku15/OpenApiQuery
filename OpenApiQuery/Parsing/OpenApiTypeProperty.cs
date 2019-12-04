@@ -6,7 +6,7 @@ namespace OpenApiQuery.Parsing
     public class OpenApiTypeProperty : IOpenApiTypeProperty
     {
         private readonly Func<object, object> _get;
-        private Action<object, object> _set;
+        private readonly Action<object, object> _set;
         public PropertyInfo ClrProperty { get; }
         public string JsonName { get; }
         public Type ValueType { get; set; }

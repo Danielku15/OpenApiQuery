@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml.Schema;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace OpenApiQuery.Test.Serialization.SystemText

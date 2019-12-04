@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using OpenApiQuery.Parsing;
-using OpenApiQuery.Serialization;
 using OpenApiQuery.Serialization.SystemText;
 
 namespace OpenApiQuery

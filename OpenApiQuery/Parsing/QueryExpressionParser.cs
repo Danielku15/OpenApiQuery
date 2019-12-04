@@ -15,7 +15,7 @@ namespace OpenApiQuery.Parsing
         private readonly IOpenApiTypeHandler _binder;
 
         private char _currentCharacter;
-        private Stack<Expression> _thisValues = new Stack<Expression>();
+        private readonly Stack<Expression> _thisValues = new Stack<Expression>();
 
         public QueryExpressionTokenKind CurrentTokenKind { get; private set; }
 
