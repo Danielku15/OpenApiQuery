@@ -104,7 +104,6 @@ namespace OpenApiQuery.Test
             Assert.AreEqual(typeof(DateTimeOffset), expr.Type);
         }
 
-
         [DataTestMethod]
         [DataRow("ceiling(3)", "Ceiling(Convert(3, Double))", typeof(double))]
         [DataRow("ceiling(3.2)", "Ceiling(Convert(3.2, Double))", typeof(double))]
@@ -117,5 +116,13 @@ namespace OpenApiQuery.Test
             ExpressionTest(actualQuery, expectedLinq, expectedType);
         }
 
+        [DataTestMethod]
+        [DataRow("cast(3.3, Int32)", "Convert(3.3, Int32)", typeof(int))]
+        [DataRow("cast(3.3, String)", "3.3.ToString()", typeof(string))]
+        [DataRow("isof(3.3, Int32)", "(3.3 Is Int32)", typeof(bool))]
+        public void TestTypeFunctions(string actualQuery, string expectedLinq, Type expectedType)
+        {
+            ExpressionTest(actualQuery, expectedLinq, expectedType);
+        }
     }
 }

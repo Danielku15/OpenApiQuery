@@ -47,5 +47,25 @@ namespace OpenApiQuery.Test
         {
             ExpressionTest(actualQuery, expectedLinq, expectedType);
         }
+        [DataTestMethod]
+        [DataRow("Boolean", "System.Boolean", typeof(Type))]
+        [DataRow("Byte", "System.Byte", typeof(Type))]
+        [DataRow("Date", "System.DateTime", typeof(Type))]
+        [DataRow("DateTimeOffset", "System.DateTimeOffset", typeof(Type))]
+        [DataRow("Decimal", "System.Decimal", typeof(Type))]
+        [DataRow("Double", "System.Double", typeof(Type))]
+        [DataRow("Duration", "System.TimeSpan", typeof(Type))]
+        [DataRow("Guid", "System.Guid", typeof(Type))]
+        [DataRow("Int16", "System.Int16", typeof(Type))]
+        [DataRow("Int32", "System.Int32", typeof(Type))]
+        [DataRow("Int64", "System.Int64", typeof(Type))]
+        [DataRow("SByte", "System.SByte", typeof(Type))]
+        [DataRow("Single", "System.Single", typeof(Type))]
+        [DataRow("String", "System.String", typeof(Type))]
+        [DataRow("TimeOfDay", "System.TimeSpan", typeof(Type))]
+        public void TestTypeNames(string actualQuery, string expectedLinq, Type expectedType)
+        {
+            ExpressionTest(actualQuery, expectedLinq, expectedType, true);
+        }
     }
 }

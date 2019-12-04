@@ -69,10 +69,10 @@ The ultimate goal is to support a full OData alike experience with using an Open
 | 5.1.1.7 String Functions                              | Partially Supported (tolower, toupper, trim)                                             |
 | 5.1.1.8 Date and Time Functions                       | Supported                                                                                |
 | 5.1.1.9 Arithmetic Functions                          | Supported                                                                                |
-| 5.1.1.10 Type Functions                               | Not yet supported                                                                        |
+| 5.1.1.10 Type Functions                               | Partially Supported (simple casts)                                                       |
 | 5.1.1.11 Geo Functions                                | Not yet supported                                                                        |
-| 5.1.1.12 Conditional Functions                        | Not yet supported                                                                        |
-| 5.1.1.13 Lambda Operators                             | Not yet supported                                                                        |
+| 5.1.1.12 Conditional Functions                        | Not planned                                                                              |
+| 5.1.1.13 Lambda Operators                             | Not planned                                                                              |
 | 5.1.1.14.1 Primitive Literals                         | Partially Supported (null, bool, int, double, single, string, dateTimeOffset, guid, long |
 | 5.1.1.14.2 Complex and Collection Literals            | Partially Supported (no aliases)                                                         |
 | 5.1.1.14.3 null                                       | Supported                                                                                |

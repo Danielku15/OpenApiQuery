@@ -773,11 +773,30 @@ namespace OpenApiQuery.Parsing
                     {
                         if (expression == null)
                         {
-                            expression = _thisValues.Peek();
+                            expression = _thisValues.Count == 0 ? null : _thisValues.Peek();
                         }
 
                         var member = BindMember(expression, identifier);
-                        return Expression.MakeMemberAccess(expression, member);
+                        if (member != null)
+                        {
+                            return Expression.MakeMemberAccess(expression, member);
+                        }
+
+                        //  fallback to type name
+                        var builtInType = GetBuiltInTypeByName(identifier);
+                        if (builtInType != null)
+                        {
+                            return Expression.Constant(builtInType);
+                        }
+
+                        // fallback to API type name
+                        var apiType = _binder.ResolveType(identifier);
+                        if (apiType != null)
+                        {
+                            return Expression.Constant(apiType.ClrType);
+                        }
+
+                        throw new BindException($"Could not bind member '{identifier}'");
                     }
 
                 case QueryExpressionTokenKind.OpenParenthesis:
@@ -789,6 +808,50 @@ namespace OpenApiQuery.Parsing
             }
         }
 
+        public static Type GetBuiltInTypeByName(string typeName)
+        {
+            // primitiveTypeName
+            if (typeName.StartsWith("Edm."))
+            {
+                typeName = typeName.Substring(4);
+            }
+
+            switch (typeName)
+            {
+                case "Boolean":
+                    return typeof(bool);
+                case "Byte":
+                    return typeof(byte);
+                case "Date":
+                    return typeof(DateTime);
+                case "DateTimeOffset":
+                    return typeof(DateTimeOffset);
+                case "Decimal":
+                    return typeof(decimal);
+                case "Double":
+                    return typeof(double);
+                case "Duration":
+                    return typeof(TimeSpan);
+                case "Guid":
+                    return typeof(Guid);
+                case "Int16":
+                    return typeof(short);
+                case "Int32":
+                    return typeof(int);
+                case "Int64":
+                    return typeof(long);
+                case "SByte":
+                    return typeof(sbyte);
+                case "Single":
+                    return typeof(float);
+                case "String":
+                    return typeof(string);
+                case "TimeOfDay":
+                    return typeof(TimeSpan);
+            }
+
+            return null;
+        }
 
         private Expression Literal()
         {

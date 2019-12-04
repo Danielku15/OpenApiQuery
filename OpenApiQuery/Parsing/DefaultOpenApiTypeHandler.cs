@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,11 +15,34 @@ namespace OpenApiQuery.Parsing
         private readonly ConcurrentDictionary<Type, IOpenApiType> _typeCache =
             new ConcurrentDictionary<Type, IOpenApiType>();
 
+        private readonly ConcurrentDictionary<string, IOpenApiType> _typeByNameCache =
+            new ConcurrentDictionary<string, IOpenApiType>();
+
         public IOpenApiType ResolveType(Type clrType)
         {
             if (!_typeCache.TryGetValue(clrType, out var type))
             {
                 _typeCache[clrType] = type = BuildOpenApiType(clrType);
+                if (type != null)
+                {
+                    _typeByNameCache[type.JsonName] = type;
+                }
+            }
+
+            return type;
+        }
+
+        public IOpenApiType ResolveType(string jsonName)
+        {
+            if (jsonName == null)
+            {
+                return null;
+            }
+
+            if (!_typeByNameCache.TryGetValue(jsonName, out var type))
+            {
+                // TOOD: how to resolve type correctly without security issues?
+                return null;
             }
 
             return type;
@@ -66,16 +90,21 @@ namespace OpenApiQuery.Parsing
 
         public PropertyInfo BindProperty(Expression instance, string memberName)
         {
+            if (instance == null)
+            {
+                return null;
+            }
+
             var type = instance.Type;
             var apiType = ResolveType(type);
             if (apiType == null)
             {
-                throw new BindException($"Could not find API type definition for '{type.Name}'");
+                return null;
             }
 
             if (!apiType.TryGetProperty(memberName, out var property))
             {
-                throw new BindException($"Could not find member '{memberName}' on type '{type.Name}'");
+                return null;
             }
 
             return property.ClrProperty;
@@ -198,6 +227,9 @@ namespace OpenApiQuery.Parsing
 
         private static readonly MethodInfo MathRound =
             ReflectionHelper.GetMethod(() => Math.Round((double)1));
+
+        private static readonly MethodInfo ObjectToString =
+            ReflectionHelper.GetMethod<object, string>(o => o.ToString());
 
         public Expression BindFunctionCall(
             string identifier,
@@ -582,15 +614,66 @@ namespace OpenApiQuery.Parsing
 
                 // type functions
                 case "cast":
-                    break;
+                    ValidateParameterCount(2);
+
+                    var castType = ParseTargetType(arguments[1]);
+                    if (castType == null)
+                    {
+                        throw new BindException("No proper type for cast specified");
+                    }
+
+                    return BindCast(arguments[0], castType);
+
                 case "isof":
-                    break;
+                    ValidateParameterCount(2);
+
+                    var typeCheckType = ParseTargetType(arguments[1]);
+                    if (typeCheckType == null)
+                    {
+                        throw new BindException("No proper type for type check specified");
+                    }
+
+                    return Expression.TypeIs(arguments[0], typeCheckType);
 
                 default:
                     throw new BindException($"Could not find any function '{identifier}'");
             }
 
             return null;
+        }
+
+        private Type ParseTargetType(Expression argument)
+        {
+            var targetType = (argument as ConstantExpression)?.Value as Type;
+            if (targetType != null)
+            {
+                return targetType;
+            }
+
+            var typeName = (argument as ConstantExpression)?.Value?.ToString();
+            var apiType = ResolveType(typeName);
+            if (apiType != null)
+            {
+                return apiType.ClrType;
+            }
+
+            targetType = QueryExpressionParser.GetBuiltInTypeByName(typeName);
+            if (targetType != null)
+            {
+                return targetType;
+            }
+
+            return null;
+        }
+
+        private Expression BindCast(Expression argument, Type targetType)
+        {
+            if (targetType == typeof(string))
+            {
+                return Expression.Call(argument, ObjectToString);
+            }
+
+            return Expression.Convert(argument, targetType);
         }
     }
 }

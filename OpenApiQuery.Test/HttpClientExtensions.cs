@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenApiQuery.Parsing;
 using OpenApiQuery.Serialization.SystemText;
+using OpenApiQuery.Test.Serialization.SystemText;
 
 namespace OpenApiQuery.Test
 {
@@ -32,11 +34,15 @@ namespace OpenApiQuery.Test
             CancellationToken cancellationToken = default)
         {
             using var response = await client.GetAsync(requestUri, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var jsonText = await response.Content.ReadAsStringAsync();
+                Assert.Fail($"Request failed with status code {response.StatusCode} and response {jsonText}");
+            }
 
-            await using var json = await response.Content.ReadAsStreamAsync();
             try
             {
+                await using var json = await response.Content.ReadAsStreamAsync();
                 return await JsonSerializer.DeserializeAsync<OpenApiQueryResult<T>>(json,
                     Options.JsonSerializerOptions,
                     cancellationToken);
