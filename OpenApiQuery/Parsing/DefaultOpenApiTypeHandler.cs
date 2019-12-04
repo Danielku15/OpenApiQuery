@@ -109,26 +109,130 @@ namespace OpenApiQuery.Parsing
         private static readonly MethodInfo EnumerableContains =
             ReflectionHelper.GetMethod<IEnumerable<object>, bool>(x => x.Contains(null));
 
+        private static readonly MethodInfo EnumerableSkip =
+            ReflectionHelper.GetMethod<IEnumerable<object>, IEnumerable<object>>(x => x.Skip(1));
+
+        private static readonly MethodInfo EnumerableTake =
+            ReflectionHelper.GetMethod<IEnumerable<object>, IEnumerable<object>>(x => x.Take(1));
+
         private static readonly PropertyInfo StringLength =
             (PropertyInfo)ReflectionHelper.GetMember<string, int>(x => x.Length);
 
         private static readonly MethodInfo EnumerableCount =
             ReflectionHelper.GetMethod<IEnumerable<object>, int>(x => x.Count());
 
+        private static readonly MethodInfo StringToLowerInvariant =
+            ReflectionHelper.GetMethod<string, string>(x => x.ToLowerInvariant());
+
+        private static readonly MethodInfo StringToUpperInvariant =
+            ReflectionHelper.GetMethod<string, string>(x => x.ToUpperInvariant());
+
+        private static readonly MethodInfo StringTrim =
+            ReflectionHelper.GetMethod<string, string>(x => x.Trim());
+
+        private static readonly MemberInfo DateTimeOffsetDate =
+            ReflectionHelper.GetMember<DateTimeOffset, DateTime>(x => x.Date);
+
+        private static readonly MemberInfo DateTimeOffsetTime =
+            ReflectionHelper.GetMember<DateTimeOffset, TimeSpan>(x => x.TimeOfDay);
+
+        private static readonly MemberInfo DateTimeOffsetOffset =
+            ReflectionHelper.GetMember<DateTimeOffset, TimeSpan>(x => x.Offset);
+
+        private static readonly MemberInfo DateTimeOffsetDay =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Day);
+
+        private static readonly MemberInfo DateTimeOffsetMonth =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Month);
+
+        private static readonly MemberInfo DateTimeOffsetYear =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Year);
+
+        private static readonly MemberInfo DateTimeOffsetHour =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Hour);
+
+        private static readonly MemberInfo DateTimeOffsetMinute =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Minute);
+
+        private static readonly MemberInfo DateTimeOffsetSecond =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Second);
+
+        private static readonly MemberInfo DateTimeOffsetMilliseconds =
+            ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Millisecond);
+
+
+        private static readonly MemberInfo DateTimeOffsetMinValue =
+            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.MinValue);
+
+        private static readonly MemberInfo DateTimeOffsetMaxValue =
+            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.MinValue);
+
+        private static readonly MemberInfo DateTimeOffsetUtcNow =
+            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.UtcNow);
+
+        private static readonly MemberInfo DateTimeDate =
+            ReflectionHelper.GetMember<DateTime, DateTime>(x => x.Date);
+
+        private static readonly MemberInfo DateTimeTime =
+            ReflectionHelper.GetMember<DateTime, TimeSpan>(x => x.TimeOfDay);
+
+        private static readonly MemberInfo DateTimeDay =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Day);
+
+        private static readonly MemberInfo DateTimeMonth =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Month);
+
+        private static readonly MemberInfo DateTimeYear =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Year);
+
+        private static readonly MemberInfo DateTimeHour =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Hour);
+
+        private static readonly MemberInfo DateTimeMinute =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Minute);
+
+        private static readonly MemberInfo DateTimeSecond =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Second);
+
+        private static readonly MemberInfo DateTimeMilliseconds =
+            ReflectionHelper.GetMember<DateTime, int>(x => x.Millisecond);
+
+        private static readonly MemberInfo TimeSpanTotalMinutes =
+            ReflectionHelper.GetMember<TimeSpan, double>(x => x.TotalMinutes);
+
         public Expression BindFunctionCall(
             string identifier,
             List<Expression> arguments)
         {
+            void ValidateParameterCount(params int[] count)
+            {
+                if (count.Length == 1 && arguments.Count != count[0])
+                {
+                    throw new BindException($"{identifier} needs {count[0]} parameters");
+                }
+
+                if (!count.Contains(arguments.Count))
+                {
+                    var counts = string.Join(", ", count.Take(count.Length - 1)) + " or " + count.Last();
+                    throw new BindException($"{identifier} needs {count[0]} parameters");
+                }
+            }
+
+            void InvalidParameterTypes(string supportedTypes)
+            {
+                throw new BindException(
+                    $"Unsupported parameters provided to function '{identifier}', supported types: {supportedTypes}");
+            }
+
+
+            Type itemType;
             switch (identifier)
             {
                 // string functions
                 case "concat":
-                    if (arguments.Count == 0)
-                    {
-                        throw new BindException("concat needs at least 1 parameter");
-                    }
+                    ValidateParameterCount(1);
 
-                    if (ReflectionHelper.IsEnumerable(arguments[0].Type, out var itemType))
+                    if (ReflectionHelper.IsEnumerable(arguments[0].Type, out itemType))
                     {
                         var result = arguments[0];
                         var concatMethod = EnumerableConcat.MakeGenericMethod(itemType);
@@ -146,84 +250,309 @@ namespace OpenApiQuery.Parsing
                     }
                     else
                     {
-                        throw new BindException("concat needs either strings or enumerables for concatenation");
+                        InvalidParameterTypes("strings, enumerables");
+                        return null;
                     }
+
                 case "contains":
-                    if (arguments.Count != 2)
-                    {
-                        throw new BindException("contains needs 2 arguments");
-                    }
+                    ValidateParameterCount(2);
 
                     if (arguments[0].Type == typeof(string))
                     {
                         return Expression.Call(arguments[0], StringContains, arguments[1]);
                     }
+                    else if (ReflectionHelper.IsEnumerable(arguments[0].Type, out itemType))
+                    {
+                        return Expression.Call(null,
+                            EnumerableContains.MakeGenericMethod(itemType),
+                            arguments[0],
+                            arguments[1]);
+                    }
                     else
                     {
-                        return Expression.Call(arguments[0], EnumerableContains, arguments[1]);
-                    }
-                case "endsWith":
-                    if (arguments.Count != 2)
-                    {
-                        throw new BindException("endsWith needs 2 argument");
+                        InvalidParameterTypes("strings, enumerables");
+                        return null;
                     }
 
+                case "endswith":
+                    ValidateParameterCount(2);
                     return Expression.Call(arguments[0], StringEndsWith, arguments[1]);
-                case "indexOf":
-                    if (arguments.Count != 2)
-                    {
-                        throw new BindException("indexOf needs 2 arguments");
-                    }
 
+                case "indexof":
+                    ValidateParameterCount(2);
                     return Expression.Call(arguments[0], StringIndexOf, arguments[1]);
+
                 case "length":
-                    if (arguments.Count != 1)
-                    {
-                        throw new BindException("length needs 1 argument");
-                    }
+                    ValidateParameterCount(1);
 
                     if (arguments[0].Type == typeof(string))
                     {
                         return Expression.MakeMemberAccess(arguments[0], StringLength);
                     }
+                    else if (ReflectionHelper.IsEnumerable(arguments[0].Type, out itemType))
+                    {
+                        return Expression.Call(null, EnumerableCount.MakeGenericMethod(itemType), arguments[0]);
+                    }
                     else
                     {
-                        return Expression.Call(null, EnumerableCount, arguments[0]);
+                        InvalidParameterTypes("strings, enumerables");
+                        return null;
                     }
-                case "startsWith":
-                    if (arguments.Count != 2)
-                    {
-                        throw new BindException("startsWith needs 2 argument");
-                    }
-
+                case "startswith":
+                    ValidateParameterCount(2);
                     return Expression.Call(arguments[0], StringStartsWith, arguments[1]);
-                case "substring":
-                    if (arguments.Count != 2 && arguments.Count != 3)
-                    {
-                        throw new BindException("substring needs 2 or 3 argument");
-                    }
 
-                    if (arguments.Count == 2)
+                case "substring":
+                    ValidateParameterCount(2, 3);
+
+                    if (arguments[0].Type == typeof(string))
                     {
-                        return Expression.Call(arguments[0],
-                            StringSubstringOneParam,
-                            arguments[1]);
-                    }
-                    else
-                    {
+                        if (arguments.Count == 2)
+                        {
+                            return Expression.Call(arguments[0],
+                                StringSubstringOneParam,
+                                arguments[1]);
+                        }
+
                         return Expression.Call(arguments[0],
                             StringSubstringTwoParam,
                             arguments[1],
                             arguments[2]);
                     }
-                case "matchesPattern":
-                    break;
-                case "toLower":
-                    break;
-                case "toUpper":
-                    break;
+                    else if (ReflectionHelper.IsEnumerable(arguments[0].Type, out itemType))
+                    {
+                        if (arguments.Count == 2)
+                        {
+                            return Expression.Call(null,
+                                EnumerableSkip.MakeGenericMethod(itemType),
+                                arguments[0],
+                                arguments[1]);
+                        }
+
+                        var skip = Expression.Call(null,
+                            EnumerableSkip.MakeGenericMethod(itemType),
+                            arguments[0],
+                            arguments[1]);
+
+                        return Expression.Call(null,
+                            EnumerableTake.MakeGenericMethod(itemType),
+                            skip,
+                            arguments[2]);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("strings, enumerables");
+                        return null;
+                    }
+
+                case "tolower":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(string))
+                    {
+                        return Expression.Call(arguments[0], StringToLowerInvariant);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("strings");
+                        return null;
+                    }
+                case "toupper":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(string))
+                    {
+                        return Expression.Call(arguments[0], StringToUpperInvariant);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("strings");
+                        return null;
+                    }
                 case "trim":
-                    break;
+                    ValidateParameterCount(1);
+
+
+                    if (arguments[0].Type == typeof(string))
+                    {
+                        return Expression.Call(arguments[0], StringTrim);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("strings");
+                        return null;
+                    }
+
+                // date and time functions
+                case "date":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeDate);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetDate);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+
+                case "time":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeTime);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetTime);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "totaloffsetminutes":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(
+                            Expression.MakeMemberAccess(arguments[0], DateTimeOffsetOffset),
+                            TimeSpanTotalMinutes);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTimeOffset");
+                        return null;
+                    }
+                case "day":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeDay);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetDay);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "month":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeMonth);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetMonth);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "year":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeYear);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetYear);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "hour":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeHour);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetHour);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "minute":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeMinute);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetMinute);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "second":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeSecond);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetSecond);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+                case "fractionalseconds":
+                    ValidateParameterCount(1);
+
+                    if (arguments[0].Type == typeof(DateTime))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeMilliseconds);
+                    }
+                    else if (arguments[0].Type == typeof(DateTimeOffset))
+                    {
+                        return Expression.MakeMemberAccess(arguments[0], DateTimeOffsetMilliseconds);
+                    }
+                    else
+                    {
+                        InvalidParameterTypes("DateTime, DateTimeOffset");
+                        return null;
+                    }
+
+                case "maxdatetime":
+                    ValidateParameterCount(0);
+                    return Expression.Constant(DateTimeOffset.MaxValue);
+                case "mindatetime":
+                    ValidateParameterCount(0);
+                    return Expression.Constant(DateTimeOffset.MinValue);
+                case "now":
+                    ValidateParameterCount(0);
+                    return Expression.Constant(DateTimeOffset.UtcNow);
 
 //                // arithmetic functions
 //                case "ceiling":
