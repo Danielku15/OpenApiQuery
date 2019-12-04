@@ -80,7 +80,7 @@ namespace OpenApiQuery.Test
         [DataTestMethod]
         [DataRow("date(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Date", typeof(DateTime))]
         [DataRow("time(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.TimeOfDay", typeof(TimeSpan))]
-        [DataRow("totaloffsetminutes(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Offset.TotalMinutes", typeof(TimeSpan))]
+        [DataRow("totaloffsetminutes(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Offset.TotalMinutes", typeof(double))]
         [DataRow("day(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Day", typeof(int))]
         [DataRow("month(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Month", typeof(int))]
         [DataRow("year(2019-12-04T16:17:18)", "12/04/2019 16:17:18 +00:00.Year", typeof(int))]
@@ -103,5 +103,19 @@ namespace OpenApiQuery.Test
 
             Assert.AreEqual(typeof(DateTimeOffset), expr.Type);
         }
+
+
+        [DataTestMethod]
+        [DataRow("ceiling(3)", "Ceiling(Convert(3, Double))", typeof(double))]
+        [DataRow("ceiling(3.2)", "Ceiling(Convert(3.2, Double))", typeof(double))]
+        [DataRow("floor(3)", "Floor(Convert(3, Double))", typeof(double))]
+        [DataRow("floor(3.2)", "Floor(Convert(3.2, Double))", typeof(double))]
+        [DataRow("round(3)", "Round(Convert(3, Double))", typeof(double))]
+        [DataRow("round(3.2)", "Round(Convert(3.2, Double))", typeof(double))]
+        public void TestArithmetic(string actualQuery, string expectedLinq, Type expectedType)
+        {
+            ExpressionTest(actualQuery, expectedLinq, expectedType);
+        }
+
     }
 }

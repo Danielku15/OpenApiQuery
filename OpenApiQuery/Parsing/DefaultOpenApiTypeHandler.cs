@@ -160,16 +160,6 @@ namespace OpenApiQuery.Parsing
         private static readonly MemberInfo DateTimeOffsetMilliseconds =
             ReflectionHelper.GetMember<DateTimeOffset, int>(x => x.Millisecond);
 
-
-        private static readonly MemberInfo DateTimeOffsetMinValue =
-            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.MinValue);
-
-        private static readonly MemberInfo DateTimeOffsetMaxValue =
-            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.MinValue);
-
-        private static readonly MemberInfo DateTimeOffsetUtcNow =
-            ReflectionHelper.GetMember<DateTimeOffset, DateTimeOffset>(x => DateTimeOffset.UtcNow);
-
         private static readonly MemberInfo DateTimeDate =
             ReflectionHelper.GetMember<DateTime, DateTime>(x => x.Date);
 
@@ -199,6 +189,15 @@ namespace OpenApiQuery.Parsing
 
         private static readonly MemberInfo TimeSpanTotalMinutes =
             ReflectionHelper.GetMember<TimeSpan, double>(x => x.TotalMinutes);
+
+        private static readonly MethodInfo MathCeiling =
+            ReflectionHelper.GetMethod(() => Math.Ceiling((double)1));
+
+        private static readonly MethodInfo MathFloor =
+            ReflectionHelper.GetMethod(() => Math.Floor((double)1));
+
+        private static readonly MethodInfo MathRound =
+            ReflectionHelper.GetMethod(() => Math.Round((double)1));
 
         public Expression BindFunctionCall(
             string identifier,
@@ -230,7 +229,10 @@ namespace OpenApiQuery.Parsing
             {
                 // string functions
                 case "concat":
-                    ValidateParameterCount(1);
+                    if (arguments.Count < 1)
+                    {
+                        throw new BindException($"{identifier} needs at least 1 parameter");
+                    }
 
                     if (ReflectionHelper.IsEnumerable(arguments[0].Type, out itemType))
                     {
@@ -554,19 +556,35 @@ namespace OpenApiQuery.Parsing
                     ValidateParameterCount(0);
                     return Expression.Constant(DateTimeOffset.UtcNow);
 
-//                // arithmetic functions
-//                case "ceiling":
-//                    break;
-//                case "floor":
-//                    break;
-//                case "round":
-//                    break;
-//
-//                // type functions
-//                case "cast":
-//                    break;
-//                case "isof":
-//                    break;
+                // arithmetic functions
+                case "ceiling":
+                    ValidateParameterCount(1);
+
+                    var ceilArg = arguments[0].Type == typeof(double)
+                        ? arguments[0]
+                        : Expression.Convert(arguments[0], typeof(double));
+                    return Expression.Call(null, MathCeiling, ceilArg);
+
+                case "floor":
+                    ValidateParameterCount(1);
+
+                    var floorArg = arguments[0].Type == typeof(double)
+                        ? arguments[0]
+                        : Expression.Convert(arguments[0], typeof(double));
+                    return Expression.Call(null, MathFloor, floorArg);
+                case "round":
+                    ValidateParameterCount(1);
+
+                    var roundArg = arguments[0].Type == typeof(double)
+                        ? arguments[0]
+                        : Expression.Convert(arguments[0], typeof(double));
+                    return Expression.Call(null, MathRound, roundArg);
+
+                // type functions
+                case "cast":
+                    break;
+                case "isof":
+                    break;
 
                 default:
                     throw new BindException($"Could not find any function '{identifier}'");

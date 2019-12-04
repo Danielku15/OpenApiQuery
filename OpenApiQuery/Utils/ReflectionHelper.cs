@@ -19,6 +19,12 @@ namespace OpenApiQuery.Utils
             return method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
         }
 
+        public static MethodInfo GetMethod<TRet>(Expression<Func<TRet>> expr)
+        {
+            var method = ((MethodCallExpression)expr.Body).Method;
+            return method.IsGenericMethod ? method.GetGenericMethodDefinition() : method;
+        }
+
 
         public static bool ImplementsEnumerable(Type type, out Type itemType)
         {
