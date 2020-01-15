@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -18,7 +17,7 @@ namespace OpenApiQuery.Parsing
         private readonly ConcurrentDictionary<string, IOpenApiType> _typeByNameCache =
             new ConcurrentDictionary<string, IOpenApiType>();
 
-        public IOpenApiType ResolveType(Type clrType)
+        public virtual IOpenApiType ResolveType(Type clrType)
         {
             if (!_typeCache.TryGetValue(clrType, out var type))
             {
@@ -26,13 +25,20 @@ namespace OpenApiQuery.Parsing
                 if (type != null)
                 {
                     _typeByNameCache[type.JsonName] = type;
+
+                    // register subclasses too.
+                    var subtypes = clrType.Assembly.GetTypes().Where(t => t.IsSubclassOf(clrType));
+                    foreach (var subtype in subtypes)
+                    {
+                        ResolveType(subtype);
+                    }
                 }
             }
 
             return type;
         }
 
-        public IOpenApiType ResolveType(string jsonName)
+        public virtual IOpenApiType ResolveType(string jsonName)
         {
             if (jsonName == null)
             {
@@ -41,14 +47,24 @@ namespace OpenApiQuery.Parsing
 
             if (!_typeByNameCache.TryGetValue(jsonName, out var type))
             {
+                type = BuildOpenApiType(jsonName);
+                if (type != null)
+                {
+                    _typeCache[type.ClrType] = type;
+                    _typeByNameCache[type.JsonName] = type;
+                }
                 // TOOD: how to resolve type correctly without security issues?
-                return null;
             }
 
             return type;
         }
 
-        private IOpenApiType BuildOpenApiType(Type clrType)
+        protected virtual IOpenApiType BuildOpenApiType(string jsonName)
+        {
+            return null;
+        }
+
+        protected virtual IOpenApiType BuildOpenApiType(Type clrType)
         {
             var apiType = new OpenApiType(clrType, clrType.Name);
             if (clrType.Assembly == typeof(object).Assembly)
@@ -638,8 +654,6 @@ namespace OpenApiQuery.Parsing
                 default:
                     throw new BindException($"Could not find any function '{identifier}'");
             }
-
-            return null;
         }
 
         private Type ParseTargetType(Expression argument)

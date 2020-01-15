@@ -91,8 +91,20 @@ namespace OpenApiQuery
             IDictionary<PropertyInfo, ExpandClause> expands)
         {
             var arg = Expression.Parameter(itemType, "arg");
-            var body = BuildMemberInit(itemType, arg, selectClause, expands);
+
             var funcType = typeof(Func<,>).MakeGenericType(itemType, itemType);
+
+            // if the class can have subclasses (it is not sealed or abstract from the base type) we need to handle polymoprhism,
+            // in this case we cannot optimize the select because each row has different properties, we select the whole object
+            Expression body;
+            if (!itemType.IsSealed || itemType.IsAbstract)
+            {
+                body = arg;
+            }
+            else
+            {
+                body = BuildMemberInit(itemType, arg, selectClause, expands);
+            }
 
             // arg => new Item { ... }
             return Expression.Lambda(funcType, body, arg);

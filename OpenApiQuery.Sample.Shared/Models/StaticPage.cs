@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OpenApiQuery.Sample.Models
 {
-    public class BlogPost : IEntity
+    /// <summary>
+    /// Represents a static page on the website
+    /// </summary>
+    public abstract class StaticPage : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -16,11 +19,7 @@ namespace OpenApiQuery.Sample.Models
 
         [Required]
         [MinLength(ModelConstants.MinStringLength)]
-        [MaxLength(ModelConstants.LongStringLength)]
-        public string Text { get; set; }
-
-        [ForeignKey(nameof(Blog))] public int BlogId { get; set; }
-
-        public Blog Blog { get; set; }
+        [MaxLength(ModelConstants.SmallStringLength)]
+        public string Slug { get; set; }
     }
 }

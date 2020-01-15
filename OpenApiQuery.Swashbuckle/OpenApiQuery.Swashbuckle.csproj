@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+
+        <PackageVersion>1.0.0</PackageVersion>
+        <PackageId>OpenApiQuery.Swashbuckle</PackageId>
+        <Title>OpenApiQuery.Swashbuckle</Title>
+        <Authors>Daniel Kuschny</Authors>
+        <Description>Swashbuckle extension for OpenApiQuery</Description>
+        <Copyright>(C) 2019 Daniel Kuschny</Copyright>
+        <PackageProjectUrl>https://github.com/Danielku15/OpenApiQuery</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/Danielku15/OpenApiQuery</RepositoryUrl>
+        
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0-rc4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OpenApiQuery\OpenApiQuery.csproj" />
+    </ItemGroup>
+</Project>

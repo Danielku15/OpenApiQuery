@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>6BB2F1B9-17D0-4D7F-9F21-B954BBDA9262</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>OpenApiQuery.Sample.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\BlogPostsController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\BlogsController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\OpenApiController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\StaticPagesController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\UsersController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\BlogDbContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\DataSeeder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Blog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\BlogPost.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ExternalPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\IEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ModelConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\StaticPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\StaticTextPage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\User.cs" />
+  </ItemGroup>
+</Project>

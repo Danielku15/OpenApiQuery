@@ -1,20 +1,18 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using OpenApiQuery.Parsing;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace OpenApiQuery
+namespace OpenApiQuery.Swashbuckle
 {
     public static class OpenApiQueryServiceCollectionExtensions
     {
-        public static IMvcCoreBuilder AddOpenApiQuery(this IMvcCoreBuilder builder)
+        public static IMvcCoreBuilder AddOpenApiQuerySwashbuckle(this IMvcCoreBuilder builder)
         {
             var services = builder.Services;
 
             services.TryAddEnumerable(ServiceDescriptor
-                .Transient<IConfigureOptions<JsonOptions>, OpenApiOptionsSetup>());
-            services.AddSingleton<IOpenApiTypeHandler, ApiExplorerOpenApiTypeHandler>();
+                .Transient<IConfigureOptions<SwaggerGenOptions>, SwaggerGenOptionsSetup>());
 
             return builder;
         }

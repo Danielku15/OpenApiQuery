@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OpenApiQuery.Sample.Models
 {
-    public class Blog : IEntity
+    public sealed class Blog : IEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

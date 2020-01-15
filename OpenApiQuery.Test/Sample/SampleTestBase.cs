@@ -13,7 +13,8 @@ namespace OpenApiQuery.Test.Sample
     public class SampleTestBase
     {
         protected static TestServer SetupSample(
-            IEnumerable<User> testdata = null,
+            IEnumerable<User> testusers = null,
+            IEnumerable<StaticPage> testpages = null,
             Action<WebHostBuilder> setup = null
         )
         {
@@ -27,15 +28,21 @@ namespace OpenApiQuery.Test.Sample
             setup?.Invoke(builder);
 
             var server = new TestServer(builder);
-            if (testdata != null)
+            using (var scope = server.Services.CreateScope())
             {
-                using (var scope = server.Services.CreateScope())
+                var context = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
+                context.Database.EnsureCreated();
+                if (testusers != null)
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
-                    context.Database.EnsureCreated();
-                    context.Users.AddRange(testdata);
-                    context.SaveChanges();
+                    context.Users.AddRange(testusers);
                 }
+
+                if (testpages != null)
+                {
+                    context.StaticPages.AddRange(testpages);
+                }
+
+                context.SaveChanges();
             }
 
             return server;

@@ -12,5 +12,8 @@ namespace OpenApiQuery.Sample.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Blog> Blogs { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<StaticPage> StaticPages { get; set; }
+        public DbSet<StaticTextPage> StaticTextPages { get; set; }
+        public DbSet<ExternalPage> ExternalPages { get; set; }
     }
 }
