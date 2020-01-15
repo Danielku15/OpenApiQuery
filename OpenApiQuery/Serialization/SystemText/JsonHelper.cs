@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using OpenApiQuery.Parsing;
 using OpenApiQuery.Utils;
@@ -9,23 +12,6 @@ namespace OpenApiQuery.Serialization.SystemText
 {
     internal class JsonHelper
     {
-        // TODO: theoretically we should be able to replace the JsonHelper with another JsonConverter
-        // Idea: wherever we use the JsonHelper we call JsonSerializer.Serialize or Deserialize
-        // but we "clone" the options and inject an additional JsonConverterFactory that handles
-        // all API types and passes on the SelectClause and type information as context.
-        //  OpenApiQueryApplyResultConverter.Write() {
-        //     var options = CloneOptions(options);
-        //     options.Converter.Insert(0, new OpenApiQueryObjectConverter(selectClause));
-        //     JsonSerializer.Serialize(obj, options);
-        // }
-        // class OpenApiQueryObjectConverter {
-        //     Write() {
-        //        // write object as below
-        //     }
-        // }
-
-
-
         public static void WriteValue(
             Utf8JsonWriter writer,
             IOpenApiType itemType,
@@ -179,199 +165,52 @@ namespace OpenApiQuery.Serialization.SystemText
             writer.WriteEndObject();
         }
 
-
-        public static object ReadValue(
-            ref Utf8JsonReader reader,
-            IOpenApiType valueType,
-            Type valueClrType,
-            IOpenApiTypeHandler typeHandler,
-            JsonSerializerOptions options,
-            bool objectsAsDelta = false)
-        {
-            if (reader.TokenType == JsonTokenType.Null)
-            {
-                return null;
-            }
-
-            if (valueClrType == typeof(string))
-            {
-                return reader.GetString();
-            }
-
-            if (ReflectionHelper.ImplementsDictionary(valueClrType, out _, out _))
-            {
-                return JsonSerializer.Deserialize(ref reader, valueClrType, options);
-            }
-            else if (ReflectionHelper.ImplementsEnumerable(valueClrType, out var itemType))
-            {
-                var array = ReadArray(ref reader,
-                    typeHandler.ResolveType(itemType),
-                    itemType,
-                    typeHandler,
-                    options,
-                    objectsAsDelta);
-                // TODO: convert to actual target type
-                return array;
-            }
-            else if (valueType == null)
-            {
-                return JsonSerializer.Deserialize(ref reader, valueClrType, options);
-            }
-            else
-            {
-                return ReadObject(ref reader, valueType, valueClrType, typeHandler, options, objectsAsDelta);
-            }
-        }
-
-        public static object ReadArray(
-            ref Utf8JsonReader reader,
-            IOpenApiType itemType,
-            Type itemClrType,
-            IOpenApiTypeHandler typeHandler,
-            JsonSerializerOptions options,
-            bool objectsAsDelta = false)
-        {
-            if (reader.TokenType == JsonTokenType.StartArray && !reader.Read())
-            {
-                throw new JsonException("Unexpected end of stream.");
-            }
-
-            switch (reader.TokenType)
-            {
-                case JsonTokenType.Null:
-                    return null;
-                case JsonTokenType.StartObject:
-                    return ReadObjectArray(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta);
-
-                case JsonTokenType.StartArray:
-                    if (itemClrType.IsArray)
-                    {
-                        var elementType = itemClrType.GetElementType();
-                        return ReadArrayArray(ref reader,
-                            typeHandler.ResolveType(elementType),
-                            elementType,
-                            typeHandler,
-                            options,
-                            objectsAsDelta);
-                    }
-                    else
-                    {
-                        throw new JsonException($"Unexpected JSON Token {reader.TokenType}.");
-                    }
-                case JsonTokenType.String:
-                case JsonTokenType.Number:
-                case JsonTokenType.True:
-                case JsonTokenType.False:
-                    return ReadNativeArray(ref reader, itemClrType, options);
-
-                case JsonTokenType.EndArray:
-                    return Array.CreateInstance(itemClrType, 0);
-
-                default:
-                    throw new JsonException($"Unexpected JSON Token {reader.TokenType}.");
-            }
-        }
-
-        private static object ReadNativeArray(
-            ref Utf8JsonReader reader,
-            Type itemClrType,
-            JsonSerializerOptions options)
-        {
-            var resultItems = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemClrType));
-
-            do
-            {
-                if (reader.TokenType == JsonTokenType.EndArray)
-                {
-                    var array = Array.CreateInstance(itemClrType, resultItems.Count);
-                    resultItems.CopyTo(array, 0);
-                    return array;
-                }
-
-                resultItems.Add(JsonSerializer.Deserialize(ref reader, itemClrType, options));
-            } while (reader.Read());
-
-            throw new JsonException("Unexpected end of stream.");
-        }
-
-        private static object ReadObjectArray(
-            ref Utf8JsonReader reader,
-            IOpenApiType itemType,
-            Type itemClrType,
-            IOpenApiTypeHandler typeHandler,
-            JsonSerializerOptions options,
-            bool objectsAsDelta = false)
-        {
-            var elementType = objectsAsDelta
-                ? typeof(Delta<>).MakeGenericType(itemClrType)
-                : itemClrType;
-
-            var resultItems = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
-            do
-            {
-                if (reader.TokenType == JsonTokenType.EndArray)
-                {
-                    var array = Array.CreateInstance(itemClrType, resultItems.Count);
-                    resultItems.CopyTo(array, 0);
-                    return array;
-                }
-
-                resultItems.Add(ReadValue(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
-            } while (reader.Read());
-
-            throw new JsonException("Unexpected end of stream.");
-        }
-
         public static object ReadObject(
-            ref Utf8JsonReader reader,
+            JsonElement obj,
             IOpenApiType itemType,
             Type itemClrType,
             IOpenApiTypeHandler typeHandler,
-            JsonSerializerOptions options,
             bool objectAsDelta = false)
         {
             if (itemType == null)
             {
-                throw new JsonException("Cannot deserialize unknown type.");
+                throw new SerializationException("Cannot deserialize unknown type.");
             }
 
-            // TODO: better object creation, and polymorphism handling!
+            var properties = obj.EnumerateObject().ToDictionary(p => p.Name, p => p.Value);
+
+            if (properties.TryGetValue("@odata.type", out var type) && type.ValueKind == JsonValueKind.String)
+            {
+                var typeName = type.GetString();
+                var actualType = typeHandler.ResolveType(typeName);
+                if (actualType == null)
+                {
+                    throw new SerializationException($"No type with identifier '{typeName}' found");
+                }
+
+                if (!itemClrType.IsAssignableFrom(actualType.ClrType))
+                {
+                    throw new SerializationException($"Type '{typeName}' is not assignable to '{itemType.JsonName}'");
+                }
+
+                itemType = actualType;
+                itemClrType = actualType.ClrType;
+            }
+
             var instance = objectAsDelta
                 ? Activator.CreateInstance(typeof(Delta<>).MakeGenericType(itemClrType))
                 : Activator.CreateInstance(itemClrType);
 
-            while (reader.Read())
+            foreach (var member in properties)
             {
-                if (reader.TokenType == JsonTokenType.EndObject)
+                if (itemType.TryGetProperty(member.Key, out var property))
                 {
-                    return instance;
-                }
-
-                if (reader.TokenType != JsonTokenType.PropertyName)
-                {
-                    throw new JsonException($"Unexpected JSON Token {reader.TokenType}.");
-                }
-
-                var propertyName = reader.GetString();
-
-                if (propertyName == "@odata.type")
-                {
-                    // TOOD: support polymorphism
-                    reader.Skip();
-                }
-                else if (itemType.TryGetProperty(propertyName, out var property))
-                {
-                    if (!reader.Read())
-                    {
-                        throw new JsonException("Unexpected end of stream.");
-                    }
-
                     var propertyType = typeHandler.ResolveType(property.ClrProperty.PropertyType);
-                    var value = ReadValue(ref reader,
+
+                    var value = ReadValue(member.Value,
                         propertyType,
                         property.ClrProperty.PropertyType,
                         typeHandler,
-                        options,
                         objectAsDelta);
                     // TODO: check for components in the model binding area which help us here
                     // many conversions (string -> enum,date,timespan) etc. do not work like this.
@@ -380,37 +219,179 @@ namespace OpenApiQuery.Serialization.SystemText
                 else
                 {
                     // TODO: how do we want to treat unknown props? fail or ignore?
-                    // throw new JsonException($"Unexpected property {propertyName}.");
-                    reader.Skip();
                 }
             }
 
-            throw new JsonException("Unexpected end of stream.");
+            return instance;
         }
 
-
-        private static object ReadArrayArray(
-            ref Utf8JsonReader reader,
-            IOpenApiType itemType,
-            Type itemClrType,
+        public static object ReadValue(
+            JsonElement value,
+            IOpenApiType valueType,
+            Type valueClrType,
             IOpenApiTypeHandler typeHandler,
-            JsonSerializerOptions options,
             bool objectsAsDelta = false)
         {
-            var resultItems = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemClrType));
-            do
+            switch (value.ValueKind)
             {
-                if (reader.TokenType == JsonTokenType.EndArray)
-                {
-                    var array = Array.CreateInstance(itemClrType, resultItems.Count);
-                    resultItems.CopyTo(array, 0);
-                    return array;
-                }
+                case JsonValueKind.Object:
+                    if (valueType == null &&
+                        ReflectionHelper.ImplementsDictionary(valueClrType, out var dictKeyType, out var dictValueType))
+                    {
+                        var dictionary = Activator.CreateInstance(valueClrType);
+                        var indexer = valueClrType.GetProperties()
+                            .FirstOrDefault(p => IsDictionaryIndexer(p, dictKeyType, dictValueType));
+                        if (indexer == null)
+                        {
+                            throw new SerializationException(
+                                "Could not find dictionary indexer for deserializing object");
+                        }
 
-                resultItems.Add(ReadArray(ref reader, itemType, itemClrType, typeHandler, options, objectsAsDelta));
-            } while (reader.Read());
+                        var dictValueApiType = typeHandler.ResolveType(dictValueType);
+                        foreach (var prop in value.EnumerateObject())
+                        {
+                            var dictValue = ReadValue(prop.Value,
+                                dictValueApiType,
+                                dictValueType,
+                                typeHandler,
+                                false);
 
-            throw new JsonException("Unexpected end of stream.");
+                            indexer.SetValue(dictionary,
+                                dictValue,
+                                new object[]
+                                {
+                                    prop.Name
+                                });
+                        }
+
+                        return dictionary;
+                    }
+                    else
+                    {
+                        return ReadObject(value, valueType, valueClrType, typeHandler, objectsAsDelta);
+                    }
+                case JsonValueKind.Array:
+                    if (ReflectionHelper.ImplementsEnumerable(valueClrType, out var itemType))
+                    {
+                        var array = ReadArray(value,
+                            typeHandler.ResolveType(itemType),
+                            itemType,
+                            typeHandler,
+                            objectsAsDelta);
+
+                        if (valueClrType.IsArray)
+                        {
+                            return array;
+                        }
+
+                        return Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), array);
+                    }
+                    else
+                    {
+                        var itemTypeName = valueType?.JsonName ?? valueClrType.Name;
+                        throw new SerializationException($"Cannot convert an array value to {itemTypeName}");
+                    }
+                case JsonValueKind.Number:
+                    if (valueClrType == typeof(double))
+                    {
+                        return value.GetDouble();
+                    }
+                    else if (valueClrType == typeof(float))
+                    {
+                        return value.GetSingle();
+                    }
+                    else if (valueClrType == typeof(decimal))
+                    {
+                        return value.GetDecimal();
+                    }
+                    else if (valueClrType == typeof(ulong))
+                    {
+                        return value.GetUInt64();
+                    }
+                    else if (valueClrType == typeof(long))
+                    {
+                        return value.GetInt64();
+                    }
+                    else if (valueClrType == typeof(uint))
+                    {
+                        return value.GetUInt32();
+                    }
+                    else if (valueClrType == typeof(int))
+                    {
+                        return value.GetInt32();
+                    }
+                    else if (valueClrType == typeof(ushort))
+                    {
+                        return value.GetUInt16();
+                    }
+                    else if (valueClrType == typeof(short))
+                    {
+                        return value.GetInt16();
+                    }
+                    else if (valueClrType == typeof(byte))
+                    {
+                        return value.GetByte();
+                    }
+                    else if (valueClrType == typeof(sbyte))
+                    {
+                        return value.GetSByte();
+                    }
+                    else if (valueClrType == typeof(char))
+                    {
+                        return (char)value.GetUInt64();
+                    }
+                    else
+                    {
+                        return Convert.ChangeType(value.GetInt32(), valueClrType);
+                    }
+
+                case JsonValueKind.Null:
+                    return null;
+                case JsonValueKind.String:
+                    return Convert.ChangeType(value.GetString(), valueClrType);
+                case JsonValueKind.True:
+                    return Convert.ChangeType(true, valueClrType);
+                case JsonValueKind.False:
+                    return Convert.ChangeType(false, valueClrType);
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private static object ReadArray(JsonElement value, IOpenApiType itemApiType, Type itemType, IOpenApiTypeHandler typeHandler, bool objectsAsDelta)
+        {
+            var array = Array.CreateInstance(itemType, value.GetArrayLength());
+
+            var i = 0;
+            foreach (var arrayItem in value.EnumerateArray())
+            {
+                var arrayValue = ReadValue(arrayItem,
+                    itemApiType,
+                    itemType,
+                    typeHandler,
+                    objectsAsDelta);
+                array.SetValue(arrayValue, i);
+                i++;
+            }
+
+
+            return array;
+        }
+
+        private static bool IsDictionaryIndexer(PropertyInfo prop, Type keyType, Type valueType)
+        {
+            var indexerParams = prop.GetIndexParameters();
+            if (indexerParams.Length != 1)
+            {
+                return false;
+            }
+
+            if (indexerParams[0].ParameterType != keyType)
+            {
+                return false;
+            }
+
+            return prop.PropertyType == valueType;
         }
     }
 }

@@ -27,7 +27,6 @@ namespace OpenApiQuery.Serialization.SystemText
             }
 
             var actualClrType = typeof(T);
-            var actualType = _typeHandler.ResolveType(actualClrType);
 
             var result = new OpenApiQueryResult<T>();
             while (reader.Read())
@@ -69,21 +68,12 @@ namespace OpenApiQuery.Serialization.SystemText
                             throw new JsonException("Unexpected end of stream.");
                         }
 
-                        switch (reader.TokenType)
-                        {
-                            case JsonTokenType.StartArray:
-                                result.ResultItems = (T[])JsonHelper.ReadArray(ref reader,
-                                    actualType,
-                                    actualClrType,
-                                    _typeHandler,
-                                    options);
-                                break;
-                            case JsonTokenType.Null:
-                                result.ResultItems = null;
-                                break;
-                            default:
-                                throw new JsonException($"Unexpected JSON Token {reader.TokenType}.");
-                        }
+                        var document = JsonDocument.ParseValue(ref reader);
+                        result.ResultItems = (T[])JsonHelper.ReadValue(document.RootElement,
+                            null,
+                            actualClrType.MakeArrayType(),
+                            _typeHandler
+                        );
 
                         break;
                 }

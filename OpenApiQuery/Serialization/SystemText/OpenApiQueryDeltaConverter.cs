@@ -24,11 +24,11 @@ namespace OpenApiQuery.Serialization.SystemText
             var actualClrType = typeof(T);
             var actualType = _typeHandler.ResolveType(actualClrType);
 
-            return (Delta<T>)JsonHelper.ReadObject(ref reader,
+            var document = JsonDocument.ParseValue(ref reader);
+            return (Delta<T>)JsonHelper.ReadValue(document.RootElement,
                 actualType,
                 actualClrType,
                 _typeHandler,
-                options,
                 true
             );
         }
@@ -59,6 +59,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
                         var key = options.PropertyNamingPolicy.ConvertName(property.JsonName);
                         writer.WritePropertyName(JsonEncodedText.Encode(key));
+
                         JsonHelper.WriteValue(writer,
                             propertyApiType,
                             changedProperty.Value,

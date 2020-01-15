@@ -56,7 +56,7 @@ namespace OpenApiQuery.Parsing
                 return null;
             }
 
-            var properties = clrType.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            var properties = clrType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
                 .Where(IsPropertyForApi);
 
             foreach (var property in properties)

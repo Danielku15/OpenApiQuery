@@ -27,13 +27,13 @@ namespace OpenApiQuery.Serialization.SystemText
             var actualClrType = typeof(T);
             var actualType = _typeHandler.ResolveType(actualClrType);
 
+            var document = JsonDocument.ParseValue(ref reader);
             var result = new OpenApiQuerySingleResult<T>
             {
-                ResultItem = (T)JsonHelper.ReadObject(ref reader,
+                ResultItem = (T)JsonHelper.ReadValue(document.RootElement,
                     actualType,
                     actualClrType,
-                    _typeHandler,
-                    options)
+                    _typeHandler)
             };
             return result;
         }

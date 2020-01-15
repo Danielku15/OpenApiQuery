@@ -28,9 +28,12 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             return JsonDocument.Parse(json, new JsonDocumentOptions());
         }
 
-        protected T Deserialize<T>(string json)
+        protected T Deserialize<T>(string json, IOpenApiTypeHandler typeHandler = null)
         {
-            var typeHandler = new DefaultOpenApiTypeHandler();
+            if (typeHandler == null)
+            {
+                typeHandler = new DefaultOpenApiTypeHandler();
+            }
             var jsonSerializerOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,

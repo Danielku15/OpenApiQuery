@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OpenApiQuery.Parsing;
 
 namespace OpenApiQuery.Test.Serialization.SystemText
 {
@@ -40,9 +41,13 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         }
 
         [TestMethod]
-        [Ignore("Polymorphic deserialization is not yet supported")]
         public void TestSerialize_Polymorphic()
         {
+            var typeHandler = new DefaultOpenApiTypeHandler();
+            typeHandler.ResolveType(typeof(Base));
+            typeHandler.ResolveType(typeof(Sub1));
+            typeHandler.ResolveType(typeof(Sub2));
+
             var objects = Deserialize<OpenApiQueryResult<Base>>(@"
             {
                 ""@odata.count"": 2,
@@ -60,7 +65,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         ""subProp"": -47
                     }
                 ]
-            }");
+            }", typeHandler);
 
             Assert.AreEqual(2, objects.TotalCount);
             Assert.AreEqual(2, objects.ResultItems.Length);
@@ -73,7 +78,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
 
             Assert.IsInstanceOfType(objects.ResultItems[1], typeof(Sub2));
             var sub2 = (Sub2)objects.ResultItems[1];
-            Assert.AreEqual(1, sub2.BaseProp);
+            Assert.AreEqual(2, sub2.BaseProp);
             Assert.AreEqual("Test", sub2.Sub2Prop);
             Assert.AreEqual(-47, sub2.SubProp);
         }
@@ -139,9 +144,13 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         }
 
         [TestMethod]
-        [Ignore("Polymorphic deserialization not working yet")]
         public void TestDeserialize_ObjectArrays_Polymorphic()
         {
+            var typeHandler = new DefaultOpenApiTypeHandler();
+            typeHandler.ResolveType(typeof(Base));
+            typeHandler.ResolveType(typeof(Sub1));
+            typeHandler.ResolveType(typeof(Sub2));
+
             var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<Base>>>(@"
             {
                 ""@odata.count"": 2,
@@ -180,7 +189,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         ]
                     }
                 ]
-            }");
+            }", typeHandler);
 
             Assert.AreEqual(2, objects.TotalCount);
             Assert.AreEqual(2, objects.ResultItems.Length);
