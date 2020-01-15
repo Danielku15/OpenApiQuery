@@ -41,7 +41,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         }
 
         [TestMethod]
-        public void TestSerialize_Polymorphic()
+        public void TestDeserialize_Polymorphic()
         {
             var typeHandler = new DefaultOpenApiTypeHandler();
             typeHandler.ResolveType(typeof(Base));
@@ -293,7 +293,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         }
 
         [TestMethod]
-        public void TestSerialize_Dictionary_SimpleTypes()
+        public void TestDeserialize_Dictionary_SimpleTypes()
         {
             var objects = Deserialize<OpenApiQueryResult<Dictionary<string, int>>>(@"{
                 ""value"": [
