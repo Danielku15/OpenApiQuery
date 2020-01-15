@@ -131,6 +131,31 @@ namespace OpenApiQuery.Test.Sample
             Assert.AreEqual("Match2,Match1",
                 string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
         }
+        [TestMethod]
+        public async Task TestExpand_WithExpand_AllOptions_NoDollar()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog {Name = "Match1"},
+                        new Blog {Name = "Match2"},
+                        new Blog {Name = "NotMatch3"},
+                        new Blog {Name = "NotMatch4"},
+                        new Blog {Name = "Match5"}
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?expand=blogs(filter=startswith(name, 'Match');orderby=name desc;skip=1;top=2)");
+            Assert.AreEqual(1, response.ResultItems.Length);
+            Assert.IsNotNull(response.ResultItems[0].Blogs);
+            Assert.AreEqual("Match2,Match1",
+                string.Join(",", response.ResultItems[0].Blogs.Select(u => u.Name)));
+        }
 
         [TestMethod]
         public async Task TestExpand_WithExpand_ExpandOrderBy()
@@ -239,6 +264,42 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<BlogPost>("/blogPosts?$expand=blog");
+            Assert.AreEqual(3, response.ResultItems.Length);
+            Assert.AreEqual("A,A,B", string.Join(",", response.ResultItems.Select(p => p.Blog.Name)));
+        }
+
+        [TestMethod]
+        public async Task TestExpand_WithExpand_NoDollar_SingleProperty()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    Blogs = new[]
+                    {
+                        new Blog
+                        {
+                            Name = "A",
+                            Posts = new[]
+                            {
+                                new BlogPost(),
+                                new BlogPost()
+                            }
+                        },
+                        new Blog
+                        {
+                            Name = "B",
+                            Posts = new[]
+                            {
+                                new BlogPost()
+                            }
+                        }
+                    }
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<BlogPost>("/blogPosts?expand=blog");
             Assert.AreEqual(3, response.ResultItems.Length);
             Assert.AreEqual("A,A,B", string.Join(",", response.ResultItems.Select(p => p.Blog.Name)));
         }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenApiQuery.Parsing;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
@@ -47,13 +48,14 @@ namespace OpenApiQuery
 
         public void Initialize(HttpContext httpContext, ILogger logger, ModelStateDictionary modelState)
         {
-            if (httpContext.Request.Query.TryGetValue("$orderby", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.OrderbyKeys, out var values))
             {
-                if (values.Count == 1)
+                using var enumerator = values.GetEnumerator();
+                if (enumerator.MoveNext())
                 {
                     var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
-                    RawValue = values[0];
-                    var parser = new OrderByClauseParser(binder, values[0], Clauses);
+                    RawValue = enumerator.Current;
+                    var parser = new OrderByClauseParser(binder, enumerator.Current, Clauses);
                     try
                     {
                         parser.Parse(Parameter);
@@ -61,13 +63,14 @@ namespace OpenApiQuery
                     catch (Exception e)
                     {
                         logger.LogError(e, "Failed to parse orderby clause");
-                        modelState.TryAddModelException("$orderby", e);
+                        modelState.TryAddModelException(QueryOptionKeys.OrderbyKeys.First(), e);
                     }
-                }
-                else
-                {
-                    modelState.TryAddModelError("$orderby",
-                        "Multiple orderby clauses found, onle one can be specified.");
+
+                    if (enumerator.MoveNext())
+                    {
+                        modelState.TryAddModelError(QueryOptionKeys.OrderbyKeys.First(),
+                            "Multiple orderby clauses found, only one can be specified.");
+                    }
                 }
             }
         }
@@ -81,7 +84,7 @@ namespace OpenApiQuery
             }
             catch (Exception e)
             {
-                modelState.TryAddModelException("$orderby", e);
+                modelState.TryAddModelException(QueryOptionKeys.OrderbyKeys.First(), e);
             }
         }
 
@@ -94,7 +97,7 @@ namespace OpenApiQuery
             {
                 _parser = new QueryExpressionParser(value, binder);
                 _clauses = clauses;
-            }          
+            }
             public OrderByClauseParser(QueryExpressionParser parser, IList<OrderByClause> clauses)
             {
                 _parser = parser;

@@ -41,6 +41,36 @@ namespace OpenApiQuery.Test.Sample
         }
 
         [TestMethod]
+        public async Task TestSelect_SimpleProperties_NoDollar()
+        {
+            using var server = SetupSample(new[]
+            {
+                new User
+                {
+                    FirstName = "A",
+                    LastName = "B",
+                    EMail = "C"
+                },
+                new User
+                {
+                    FirstName = "D",
+                    LastName = "E",
+                    EMail = "F"
+                }
+            });
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?select=firstName,email");
+            Assert.AreEqual(2, response.ResultItems.Length);
+            Assert.AreEqual("A", response.ResultItems[0].FirstName);
+            Assert.AreEqual(null, response.ResultItems[0].LastName);
+            Assert.AreEqual("C", response.ResultItems[0].EMail);
+            Assert.AreEqual("D", response.ResultItems[1].FirstName);
+            Assert.AreEqual(null, response.ResultItems[1].LastName);
+            Assert.AreEqual("F", response.ResultItems[1].EMail);
+        }
+
+        [TestMethod]
         public async Task TestSelect_SimpleProperties_Star()
         {
             using var server = SetupSample(new[]

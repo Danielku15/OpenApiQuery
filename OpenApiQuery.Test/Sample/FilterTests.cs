@@ -32,6 +32,17 @@ namespace OpenApiQuery.Test.Sample
         }
 
         [TestMethod]
+        public async Task TestFilter_SimpleTrue_NoDollar_ReturnsAll()
+        {
+            const int testUserCount = 10;
+            using var server = SetupSample(Enumerable.Range(1, testUserCount).Select(i => new User()));
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?filter=true");
+            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+        }
+
+        [TestMethod]
         public async Task TestFilter_SimpleFalse_ReturnsNone()
         {
             const int testUserCount = 10;

@@ -26,7 +26,7 @@ namespace OpenApiQuery.Test.Sample
             using var response = await client.GetAsync("/users?$orderby=username&$orderby=firstname");
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
-        
+
         [TestMethod]
         public async Task TestOrderBy_SingleProperty_DefaultOrderIsAscending()
         {
@@ -44,6 +44,16 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=username asc");
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItems.Select(u => u.Username)));
+        }
+
+        [TestMethod]
+        public async Task TestOrderBy_SingleProperty_NoDollar_Ascending()
+        {
+            using var server = SetupSample(OrderByTestUsers);
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?orderby=username asc");
             Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItems.Select(u => u.Username)));
         }
 

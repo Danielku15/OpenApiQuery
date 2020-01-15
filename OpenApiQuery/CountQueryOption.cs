@@ -1,5 +1,7 @@
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using OpenApiQuery.Utils;
 
 namespace OpenApiQuery
 {
@@ -10,25 +12,27 @@ namespace OpenApiQuery
 
         public void Initialize(HttpContext httpContext, ModelStateDictionary modelState)
         {
-            if (httpContext.Request.Query.TryGetValue("$count", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.CountKeys, out var values))
             {
-                if (values.Count == 1)
+                using var enumerator = values.GetEnumerator();
+                if (enumerator.MoveNext())
                 {
-                    if (bool.TryParse(values[0], out var x))
+                    if (bool.TryParse(enumerator.Current, out var x))
                     {
-                        RawValue = values[0];
+                        RawValue = enumerator.Current;
                         Value = x;
                     }
                     else
                     {
-                        modelState.TryAddModelError("$count",
-                            "Invalid value specified for $count, must be bool.");
+                        modelState.TryAddModelError(QueryOptionKeys.CountKeys.First(),
+                            "Invalid value specified for count, must be bool.");
                     }
-                }
-                else
-                {
-                    modelState.TryAddModelError("$count",
-                        "Multiple top clauses found, only one can be specified.");
+
+                    if (enumerator.MoveNext())
+                    {
+                        modelState.TryAddModelError(QueryOptionKeys.CountKeys.First(),
+                            "Multiple count clauses found, only one can be specified.");
+                    }
                 }
             }
         }

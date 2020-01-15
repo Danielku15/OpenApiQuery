@@ -40,6 +40,7 @@ namespace OpenApiQuery
 
             return queryable;
         }
+
         public Expression ApplyTo(Expression expression)
         {
             if (FilterClause != null)
@@ -50,7 +51,8 @@ namespace OpenApiQuery
                     Parameter
                 );
 
-                expression = Expression.Call(null, WhereInfo.MakeGenericMethod(Parameter.Type),
+                expression = Expression.Call(null,
+                    WhereInfo.MakeGenericMethod(Parameter.Type),
                     expression,
                     whereParam
                 );
@@ -59,15 +61,19 @@ namespace OpenApiQuery
             return expression;
         }
 
-        public void Initialize(HttpContext httpContext, ILogger<OpenApiQueryOptions> logger, ModelStateDictionary modelStateDictionary)
+        public void Initialize(
+            HttpContext httpContext,
+            ILogger<OpenApiQueryOptions> logger,
+            ModelStateDictionary modelState)
         {
-            if (httpContext.Request.Query.TryGetValue("$filter", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.FilterKeys, out var values))
             {
-                if (values.Count == 1)
+                using var enumerator = values.GetEnumerator();
+                if (enumerator.MoveNext())
                 {
-                    RawValue = values[0];
+                    RawValue = enumerator.Current;
                     var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
-                    var parser = new QueryExpressionParser(values[0], binder);
+                    var parser = new QueryExpressionParser(enumerator.Current, binder);
                     try
                     {
                         parser.PushThis(Parameter);
@@ -77,12 +83,14 @@ namespace OpenApiQuery
                     catch (Exception e)
                     {
                         logger.LogError(e, "Failed to parse filter");
-                        modelStateDictionary.TryAddModelException("$filter", e);
+                        modelState.TryAddModelException(QueryOptionKeys.FilterKeys.First(), e);
                     }
-                }
-                else
-                {
-                    modelStateDictionary.TryAddModelError("$filter", "Only one $filter can be specified per request");
+
+                    if (enumerator.MoveNext())
+                    {
+                        modelState.TryAddModelError(QueryOptionKeys.FilterKeys.First(),
+                            "Multiple filter clauses found, only one can be specified.");
+                    }
                 }
             }
         }
@@ -97,7 +105,7 @@ namespace OpenApiQuery
             }
             catch (Exception e)
             {
-                modelStateDictionary.TryAddModelException("$filter", e);
+                modelStateDictionary.TryAddModelException(QueryOptionKeys.FilterKeys.First(), e);
             }
         }
     }
