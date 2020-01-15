@@ -101,5 +101,12 @@ namespace OpenApiQuery
 
             return new OpenApiQuerySingleResult<T>(this, result);
         }
+
+        public OpenApiQuerySingleResult<T> ApplyToSingle(
+            T item,
+            CancellationToken cancellationToken)
+        {
+            return new OpenApiQuerySingleResult<T>(this, item);
+        }
     }
 }

@@ -47,6 +47,27 @@ namespace OpenApiQuery.Sample.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> PostAsync(T value, CancellationToken cancellationToken)
+        {
+            await _records.AddAsync(value, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            var queryOptions = new OpenApiQueryOptions<T>();
+            var result = queryOptions.ApplyToSingle(
+                value,
+                cancellationToken
+            );
+
+            return CreatedAtAction("GetAsync",
+                RouteData.Values["controller"].ToString(),
+                new
+                {
+                    value.Id
+                },
+                result);
+        }
+
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchAsync(int id, Delta<T> value, CancellationToken cancellationToken)
         {
