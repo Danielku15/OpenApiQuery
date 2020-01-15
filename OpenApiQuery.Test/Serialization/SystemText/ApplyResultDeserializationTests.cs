@@ -11,7 +11,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestDeserialize_Simple()
         {
-            var objects = Deserialize<OpenApiQueryResult<SimpleClass>>(@"
+            var objects = Deserialize<Multiple<SimpleClass>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -29,15 +29,15 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             }");
 
             Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Items.Length);
 
-            Assert.AreEqual(1, objects.ResultItems[0].IntProp);
-            Assert.AreEqual(47.11, objects.ResultItems[0].DoubleProp);
-            Assert.AreEqual("Hello World", objects.ResultItems[0].StringProp);
+            Assert.AreEqual(1, objects.Items[0].IntProp);
+            Assert.AreEqual(47.11, objects.Items[0].DoubleProp);
+            Assert.AreEqual("Hello World", objects.Items[0].StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].IntProp);
-            Assert.AreEqual(47.12, objects.ResultItems[1].DoubleProp);
-            Assert.AreEqual("Foo Bar", objects.ResultItems[1].StringProp);
+            Assert.AreEqual(2, objects.Items[1].IntProp);
+            Assert.AreEqual(47.12, objects.Items[1].DoubleProp);
+            Assert.AreEqual("Foo Bar", objects.Items[1].StringProp);
         }
 
         [TestMethod]
@@ -48,7 +48,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             typeHandler.ResolveType(typeof(Sub1));
             typeHandler.ResolveType(typeof(Sub2));
 
-            var objects = Deserialize<OpenApiQueryResult<Base>>(@"
+            var objects = Deserialize<Multiple<Base>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -68,16 +68,16 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             }", typeHandler);
 
             Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Items.Length);
 
-            Assert.IsInstanceOfType(objects.ResultItems[0], typeof(Sub1));
-            var sub1 = (Sub1)objects.ResultItems[0];
+            Assert.IsInstanceOfType(objects.Items[0], typeof(Sub1));
+            var sub1 = (Sub1)objects.Items[0];
             Assert.AreEqual(1, sub1.BaseProp);
             Assert.AreEqual(47.11, sub1.Sub1Prop);
             Assert.AreEqual(47, sub1.SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[1], typeof(Sub2));
-            var sub2 = (Sub2)objects.ResultItems[1];
+            Assert.IsInstanceOfType(objects.Items[1], typeof(Sub2));
+            var sub2 = (Sub2)objects.Items[1];
             Assert.AreEqual(2, sub2.BaseProp);
             Assert.AreEqual("Test", sub2.Sub2Prop);
             Assert.AreEqual(-47, sub2.SubProp);
@@ -86,7 +86,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestDeserialize_ObjectArrays()
         {
-            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<SimpleClass>>>(@"
+            var objects = Deserialize<Multiple<ArrayWrapper<SimpleClass>>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -122,25 +122,25 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             }");
 
             Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Items.Length);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items.Length);
-            Assert.AreEqual(1, objects.ResultItems[0].Items[0].IntProp);
-            Assert.AreEqual(47.11, objects.ResultItems[0].Items[0].DoubleProp);
-            Assert.AreEqual("A", objects.ResultItems[0].Items[0].StringProp);
+            Assert.AreEqual(2, objects.Items[0].Items.Length);
+            Assert.AreEqual(1, objects.Items[0].Items[0].IntProp);
+            Assert.AreEqual(47.11, objects.Items[0].Items[0].DoubleProp);
+            Assert.AreEqual("A", objects.Items[0].Items[0].StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items[1].IntProp);
-            Assert.AreEqual(47.12, objects.ResultItems[0].Items[1].DoubleProp);
-            Assert.AreEqual("B", objects.ResultItems[0].Items[1].StringProp);
+            Assert.AreEqual(2, objects.Items[0].Items[1].IntProp);
+            Assert.AreEqual(47.12, objects.Items[0].Items[1].DoubleProp);
+            Assert.AreEqual("B", objects.Items[0].Items[1].StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].Items.Length);
-            Assert.AreEqual(3, objects.ResultItems[1].Items[0].IntProp);
-            Assert.AreEqual(47.13, objects.ResultItems[1].Items[0].DoubleProp);
-            Assert.AreEqual("C", objects.ResultItems[1].Items[0].StringProp);
+            Assert.AreEqual(2, objects.Items[1].Items.Length);
+            Assert.AreEqual(3, objects.Items[1].Items[0].IntProp);
+            Assert.AreEqual(47.13, objects.Items[1].Items[0].DoubleProp);
+            Assert.AreEqual("C", objects.Items[1].Items[0].StringProp);
 
-            Assert.AreEqual(4, objects.ResultItems[1].Items[1].IntProp);
-            Assert.AreEqual(47.14, objects.ResultItems[1].Items[1].DoubleProp);
-            Assert.AreEqual("D", objects.ResultItems[1].Items[1].StringProp);
+            Assert.AreEqual(4, objects.Items[1].Items[1].IntProp);
+            Assert.AreEqual(47.14, objects.Items[1].Items[1].DoubleProp);
+            Assert.AreEqual("D", objects.Items[1].Items[1].StringProp);
         }
 
         [TestMethod]
@@ -151,7 +151,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             typeHandler.ResolveType(typeof(Sub1));
             typeHandler.ResolveType(typeof(Sub2));
 
-            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<Base>>>(@"
+            var objects = Deserialize<Multiple<ArrayWrapper<Base>>>(@"
             {
                 ""@odata.count"": 2,
                 ""value"": [
@@ -192,29 +192,29 @@ namespace OpenApiQuery.Test.Serialization.SystemText
             }", typeHandler);
 
             Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Items.Length);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items.Length);
-            Assert.IsInstanceOfType(objects.ResultItems[0].Items[0], typeof(Sub1));
-            Assert.AreEqual(1, ((Sub1)objects.ResultItems[0].Items[0]).BaseProp);
-            Assert.AreEqual(47.11, ((Sub1)objects.ResultItems[0].Items[0]).Sub1Prop);
-            Assert.AreEqual(47, ((Sub1)objects.ResultItems[0].Items[0]).SubProp);
+            Assert.AreEqual(2, objects.Items[0].Items.Length);
+            Assert.IsInstanceOfType(objects.Items[0].Items[0], typeof(Sub1));
+            Assert.AreEqual(1, ((Sub1)objects.Items[0].Items[0]).BaseProp);
+            Assert.AreEqual(47.11, ((Sub1)objects.Items[0].Items[0]).Sub1Prop);
+            Assert.AreEqual(47, ((Sub1)objects.Items[0].Items[0]).SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[0].Items[1], typeof(Sub2));
-            Assert.AreEqual(2, ((Sub2)objects.ResultItems[0].Items[1]).BaseProp);
-            Assert.AreEqual("Test", ((Sub2)objects.ResultItems[0].Items[1]).Sub2Prop);
-            Assert.AreEqual(-47, ((Sub2)objects.ResultItems[0].Items[1]).SubProp);
+            Assert.IsInstanceOfType(objects.Items[0].Items[1], typeof(Sub2));
+            Assert.AreEqual(2, ((Sub2)objects.Items[0].Items[1]).BaseProp);
+            Assert.AreEqual("Test", ((Sub2)objects.Items[0].Items[1]).Sub2Prop);
+            Assert.AreEqual(-47, ((Sub2)objects.Items[0].Items[1]).SubProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].Items.Length);
-            Assert.IsInstanceOfType(objects.ResultItems[1].Items[0], typeof(Sub2));
-            Assert.AreEqual(3, ((Sub2)objects.ResultItems[1].Items[0]).BaseProp);
-            Assert.AreEqual("A", ((Sub2)objects.ResultItems[1].Items[0]).Sub2Prop);
-            Assert.AreEqual(-11, ((Sub2)objects.ResultItems[1].Items[0]).SubProp);
+            Assert.AreEqual(2, objects.Items[1].Items.Length);
+            Assert.IsInstanceOfType(objects.Items[1].Items[0], typeof(Sub2));
+            Assert.AreEqual(3, ((Sub2)objects.Items[1].Items[0]).BaseProp);
+            Assert.AreEqual("A", ((Sub2)objects.Items[1].Items[0]).Sub2Prop);
+            Assert.AreEqual(-11, ((Sub2)objects.Items[1].Items[0]).SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[1].Items[1], typeof(Sub1));
-            Assert.AreEqual(4, ((Sub1)objects.ResultItems[1].Items[1]).BaseProp);
-            Assert.AreEqual(47.14, ((Sub1)objects.ResultItems[1].Items[1]).Sub1Prop);
-            Assert.AreEqual(12, ((Sub1)objects.ResultItems[1].Items[1]).SubProp);
+            Assert.IsInstanceOfType(objects.Items[1].Items[1], typeof(Sub1));
+            Assert.AreEqual(4, ((Sub1)objects.Items[1].Items[1]).BaseProp);
+            Assert.AreEqual(47.14, ((Sub1)objects.Items[1].Items[1]).Sub1Prop);
+            Assert.AreEqual(12, ((Sub1)objects.Items[1].Items[1]).SubProp);
         }
 
         [TestMethod]
@@ -278,13 +278,13 @@ namespace OpenApiQuery.Test.Serialization.SystemText
 
         private void TestDeserialize_NativeArrays<T>(string json, T[][] expected)
         {
-            var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<T>>>(json);
+            var objects = Deserialize<Multiple<ArrayWrapper<T>>>(json);
 
-            Assert.AreEqual(expected.Length, objects.ResultItems.Length);
+            Assert.AreEqual(expected.Length, objects.Items.Length);
 
             for (var i = 0; i < expected.Length; i++)
             {
-                var actual = objects.ResultItems[i].Items;
+                var actual = objects.Items[i].Items;
 
                 Assert.AreEqual(string.Join(",", expected[i]),
                     string.Join(",", actual),
@@ -295,16 +295,16 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestDeserialize_Dictionary_SimpleTypes()
         {
-            var objects = Deserialize<OpenApiQueryResult<Dictionary<string, int>>>(@"{
+            var objects = Deserialize<Multiple<Dictionary<string, int>>>(@"{
                 ""value"": [
                     { ""A"": 1, ""b"": 2, ""C"": 3 },
                     { ""d"": 4, ""E"": 5, ""F"": 6 }
                 ]
             }");
 
-            Assert.AreEqual(2, objects.ResultItems.Length);
-            Assert.AreEqual("A:1,b:2,C:3", string.Join(",", objects.ResultItems[0].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
-            Assert.AreEqual("d:4,E:5,F:6", string.Join(",", objects.ResultItems[1].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
+            Assert.AreEqual(2, objects.Items.Length);
+            Assert.AreEqual("A:1,b:2,C:3", string.Join(",", objects.Items[0].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
+            Assert.AreEqual("d:4,E:5,F:6", string.Join(",", objects.Items[1].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
         }
     }
 }

@@ -11,10 +11,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Simple()
         {
-            var actual = new OpenApiQueryResult<SimpleClass>
+            var actual = new Multiple<SimpleClass>
             {
                 TotalCount = 2,
-                ResultItems = new[]
+                Items = new[]
                 {
                     new SimpleClass
                     {
@@ -55,10 +55,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Polymorphic()
         {
-            var actual = new OpenApiQueryResult<Base>
+            var actual = new Multiple<Base>
             {
                 TotalCount = 2,
-                ResultItems = new Base[]
+                Items = new Base[]
                 {
                     new Sub1
                     {
@@ -101,10 +101,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_ObjectArrays()
         {
-            var actual = new OpenApiQueryResult<ArrayWrapper<SimpleClass>>
+            var actual = new Multiple<ArrayWrapper<SimpleClass>>
             {
                 TotalCount = 4,
-                ResultItems = new[]
+                Items = new[]
                 {
                     new ArrayWrapper<SimpleClass>
                     {
@@ -193,10 +193,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_ObjectArrays_Polymorphic()
         {
-            var actual = new OpenApiQueryResult<ArrayWrapper<Base>>
+            var actual = new Multiple<ArrayWrapper<Base>>
             {
                 TotalCount = 4,
-                ResultItems = new[]
+                Items = new[]
                 {
                     new ArrayWrapper<Base>
                     {
@@ -326,10 +326,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
 
         public void TestSerialize_NativeArrays<T>(T[][] items)
         {
-            var actual = new OpenApiQueryResult<ArrayWrapper<T>>
+            var actual = new Multiple<ArrayWrapper<T>>
             {
                 TotalCount = 4,
-                ResultItems = items.Select(i => new ArrayWrapper<T>
+                Items = items.Select(i => new ArrayWrapper<T>
                 {
                     Items = i
                 }).ToArray()
@@ -348,10 +348,10 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Dictionary_SimpleTypes()
         {
-            var actual = new OpenApiQueryResult<Dictionary<string, int>>
+            var actual = new Multiple<Dictionary<string, int>>
             {
                 TotalCount = 2,
-                ResultItems = new[]
+                Items = new[]
                 {
                     new Dictionary<string, int>
                     {
@@ -392,9 +392,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialProperties()
         {
-            var actual = new OpenApiQueryResult<SimpleClass>
-            {
-                Options = new OpenApiQueryOptions<SimpleClass>
+            var actual = new Multiple<SimpleClass>(
+                new OpenApiQueryOptions<SimpleClass>
                 {
                     SelectExpand =
                     {
@@ -409,8 +408,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         }
                     }
                 },
-                TotalCount = 2,
-                ResultItems = new[]
+                new[]
                 {
                     new SimpleClass
                     {
@@ -424,8 +422,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         DoubleProp = 47.12,
                         StringProp = "Foo Bar"
                     }
-                }
-            };
+                },
+                2);
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,
@@ -449,9 +447,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialNavigationProperties_Single()
         {
-            var actual = new OpenApiQueryResult<SimpleNavigation>
-            {
-                Options = new OpenApiQueryOptions<SimpleNavigation>
+            var actual = new Multiple<SimpleNavigation>(
+                new OpenApiQueryOptions<SimpleNavigation>
                 {
                     SelectExpand =
                     {
@@ -477,8 +474,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         }
                     }
                 },
-                TotalCount = 2,
-                ResultItems = new[]
+                new[]
                 {
                     new SimpleNavigation
                     {
@@ -517,8 +513,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                             StringProp = "F"
                         },
                     }
-                }
-            };
+                },
+                2);
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,
@@ -555,9 +551,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_PartialNavigationProperties_Collection()
         {
-            var actual = new OpenApiQueryResult<CollectionNavigation>
-            {
-                Options = new OpenApiQueryOptions<CollectionNavigation>
+            var actual = new Multiple<CollectionNavigation>(
+                new OpenApiQueryOptions<CollectionNavigation>
                 {
                     SelectExpand =
                     {
@@ -585,8 +580,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         }
                     }
                 },
-                TotalCount = 2,
-                ResultItems = new[]
+                new[]
                 {
                     new CollectionNavigation
                     {
@@ -629,8 +623,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                             }
                         }
                     }
-                }
-            };
+                },
+                2);
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,

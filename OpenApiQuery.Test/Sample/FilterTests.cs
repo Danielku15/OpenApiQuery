@@ -28,7 +28,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$filter=true");
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -39,7 +39,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?filter=true");
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$filter=false");
-            Assert.AreEqual(0, response.ResultItems.Length);
+            Assert.AreEqual(0, response.Items.Length);
         }
     }
 }

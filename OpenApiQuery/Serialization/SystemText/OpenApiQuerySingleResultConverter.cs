@@ -5,7 +5,7 @@ using OpenApiQuery.Parsing;
 
 namespace OpenApiQuery.Serialization.SystemText
 {
-    public class OpenApiQuerySingleResultConverter<T> : JsonConverter<OpenApiQuerySingleResult<T>>
+    public class OpenApiQuerySingleResultConverter<T> : JsonConverter<Single<T>>
     {
         private readonly IOpenApiTypeHandler _typeHandler;
 
@@ -14,7 +14,7 @@ namespace OpenApiQuery.Serialization.SystemText
             _typeHandler = typeHandler;
         }
 
-        public override OpenApiQuerySingleResult<T> Read(
+        public override Single<T> Read(
             ref Utf8JsonReader reader,
             Type typeToConvert,
             JsonSerializerOptions options)
@@ -28,7 +28,7 @@ namespace OpenApiQuery.Serialization.SystemText
             var actualType = _typeHandler.ResolveType(actualClrType);
 
             var document = JsonDocument.ParseValue(ref reader);
-            var result = new OpenApiQuerySingleResult<T>
+            var result = new Single<T>
             {
                 ResultItem = (T)JsonHelper.ReadValue(document.RootElement,
                     actualType,
@@ -40,7 +40,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
         public override void Write(
             Utf8JsonWriter writer,
-            OpenApiQuerySingleResult<T> value,
+            Single<T> value,
             JsonSerializerOptions options)
         {
             var itemType = _typeHandler.ResolveType(typeof(T));

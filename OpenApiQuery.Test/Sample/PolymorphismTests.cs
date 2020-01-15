@@ -39,16 +39,16 @@ namespace OpenApiQuery.Test.Sample
 
             var response = await client.GetQueryAsync<StaticPage>("/staticPages?$orderby=title asc");
             Assert.IsNull(response.TotalCount, "response.TotalCount == null");
-            Assert.AreEqual(3, response.ResultItems.Length);
+            Assert.AreEqual(3, response.Items.Length);
 
-            Assert.IsInstanceOfType(response.ResultItems[0], typeof(StaticTextPage));
-            Assert.AreEqual("Hello World", ((StaticTextPage)response.ResultItems[0]).Content);
+            Assert.IsInstanceOfType(response.Items[0], typeof(StaticTextPage));
+            Assert.AreEqual("Hello World", ((StaticTextPage)response.Items[0]).Content);
 
-            Assert.IsInstanceOfType(response.ResultItems[1], typeof(StaticTextPage));
-            Assert.AreEqual("Contact Details", ((StaticTextPage)response.ResultItems[1]).Content);
+            Assert.IsInstanceOfType(response.Items[1], typeof(StaticTextPage));
+            Assert.AreEqual("Contact Details", ((StaticTextPage)response.Items[1]).Content);
 
-            Assert.IsInstanceOfType(response.ResultItems[2], typeof(ExternalPage));
-            Assert.AreEqual("https://google.com", ((ExternalPage)response.ResultItems[2]).ExternalUrl);
+            Assert.IsInstanceOfType(response.Items[2], typeof(ExternalPage));
+            Assert.AreEqual("https://google.com", ((ExternalPage)response.Items[2]).ExternalUrl);
         }
         [TestMethod]
         public async Task TestGetSingle_DeserializesCorrectTypes()

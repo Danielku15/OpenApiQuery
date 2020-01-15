@@ -31,13 +31,13 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$select=firstName,email");
-            Assert.AreEqual(2, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].FirstName);
-            Assert.AreEqual(null, response.ResultItems[0].LastName);
-            Assert.AreEqual("C", response.ResultItems[0].EMail);
-            Assert.AreEqual("D", response.ResultItems[1].FirstName);
-            Assert.AreEqual(null, response.ResultItems[1].LastName);
-            Assert.AreEqual("F", response.ResultItems[1].EMail);
+            Assert.AreEqual(2, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].FirstName);
+            Assert.AreEqual(null, response.Items[0].LastName);
+            Assert.AreEqual("C", response.Items[0].EMail);
+            Assert.AreEqual("D", response.Items[1].FirstName);
+            Assert.AreEqual(null, response.Items[1].LastName);
+            Assert.AreEqual("F", response.Items[1].EMail);
         }
 
         [TestMethod]
@@ -61,13 +61,13 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?select=firstName,email");
-            Assert.AreEqual(2, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].FirstName);
-            Assert.AreEqual(null, response.ResultItems[0].LastName);
-            Assert.AreEqual("C", response.ResultItems[0].EMail);
-            Assert.AreEqual("D", response.ResultItems[1].FirstName);
-            Assert.AreEqual(null, response.ResultItems[1].LastName);
-            Assert.AreEqual("F", response.ResultItems[1].EMail);
+            Assert.AreEqual(2, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].FirstName);
+            Assert.AreEqual(null, response.Items[0].LastName);
+            Assert.AreEqual("C", response.Items[0].EMail);
+            Assert.AreEqual("D", response.Items[1].FirstName);
+            Assert.AreEqual(null, response.Items[1].LastName);
+            Assert.AreEqual("F", response.Items[1].EMail);
         }
 
         [TestMethod]
@@ -85,10 +85,10 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$select=*");
-            Assert.AreEqual(1, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].FirstName);
-            Assert.AreEqual("B", response.ResultItems[0].LastName);
-            Assert.AreEqual("C", response.ResultItems[0].EMail);
+            Assert.AreEqual(1, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].FirstName);
+            Assert.AreEqual("B", response.Items[0].LastName);
+            Assert.AreEqual("C", response.Items[0].EMail);
         }
 
         [TestMethod]
@@ -117,9 +117,9 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$select=username,blogs");
-            Assert.AreEqual(1, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].Username);
-            Assert.AreEqual(null, response.ResultItems[0].Blogs);
+            Assert.AreEqual(1, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].Username);
+            Assert.AreEqual(null, response.Items[0].Blogs);
         }
 
         [TestMethod]
@@ -183,14 +183,14 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$select=username,blogs/name&$expand=blogs");
-            Assert.AreEqual(1, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].Username);
-            Assert.AreEqual(null, response.ResultItems[0].FirstName);
-            Assert.AreEqual(2, response.ResultItems[0].Blogs.Count);
-            Assert.AreEqual("A1", response.ResultItems[0].Blogs.ElementAt(0).Name);
-            Assert.AreEqual(null, response.ResultItems[0].Blogs.ElementAt(0).Description);
-            Assert.AreEqual("A2", response.ResultItems[0].Blogs.ElementAt(1).Name);
-            Assert.AreEqual(null, response.ResultItems[0].Blogs.ElementAt(1).Description);
+            Assert.AreEqual(1, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].Username);
+            Assert.AreEqual(null, response.Items[0].FirstName);
+            Assert.AreEqual(2, response.Items[0].Blogs.Count);
+            Assert.AreEqual("A1", response.Items[0].Blogs.ElementAt(0).Name);
+            Assert.AreEqual(null, response.Items[0].Blogs.ElementAt(0).Description);
+            Assert.AreEqual("A2", response.Items[0].Blogs.ElementAt(1).Name);
+            Assert.AreEqual(null, response.Items[0].Blogs.ElementAt(1).Description);
         }
 
         [TestMethod]
@@ -216,13 +216,13 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$select=username,blogs/*&$expand=blogs");
-            Assert.AreEqual(1, response.ResultItems.Length);
-            Assert.AreEqual("A", response.ResultItems[0].Username);
-            Assert.AreEqual(null, response.ResultItems[0].LastName);
-            Assert.AreEqual(null, response.ResultItems[0].EMail);
-            Assert.AreEqual(1, response.ResultItems[0].Blogs.Count);
-            Assert.AreEqual("A1", response.ResultItems[0].Blogs.ElementAt(0).Name);
-            Assert.AreEqual("A1_Desc", response.ResultItems[0].Blogs.ElementAt(0).Description);
+            Assert.AreEqual(1, response.Items.Length);
+            Assert.AreEqual("A", response.Items[0].Username);
+            Assert.AreEqual(null, response.Items[0].LastName);
+            Assert.AreEqual(null, response.Items[0].EMail);
+            Assert.AreEqual(1, response.Items[0].Blogs.Count);
+            Assert.AreEqual("A1", response.Items[0].Blogs.ElementAt(0).Name);
+            Assert.AreEqual("A1_Desc", response.Items[0].Blogs.ElementAt(0).Description);
         }
 
         [TestMethod]

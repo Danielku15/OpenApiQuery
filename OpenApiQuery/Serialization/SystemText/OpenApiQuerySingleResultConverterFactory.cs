@@ -18,7 +18,7 @@ namespace OpenApiQuery.Serialization.SystemText
         public override bool CanConvert(Type typeToConvert)
         {
             return typeToConvert.IsGenericType &&
-                   typeToConvert.GetGenericTypeDefinition() == typeof(OpenApiQuerySingleResult<>);
+                   typeToConvert.GetGenericTypeDefinition() == typeof(Single<>);
         }
 
         public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)

@@ -48,8 +48,9 @@ namespace OpenApiQuery.Sample.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync(T value, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostAsync(Single<T> item, CancellationToken cancellationToken)
         {
+            var value = item.ResultItem;
             await _records.AddAsync(value, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -59,13 +60,7 @@ namespace OpenApiQuery.Sample.Controllers
                 cancellationToken
             );
 
-            return CreatedAtAction("GetAsync",
-                RouteData.Values["controller"].ToString(),
-                new
-                {
-                    value.Id
-                },
-                result);
+            return Created("", result);
         }
 
         [HttpPatch("{id}")]

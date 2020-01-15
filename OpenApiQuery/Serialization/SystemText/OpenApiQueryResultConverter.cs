@@ -5,7 +5,7 @@ using OpenApiQuery.Parsing;
 
 namespace OpenApiQuery.Serialization.SystemText
 {
-    public class OpenApiQueryResultConverter<T> : JsonConverter<OpenApiQueryResult<T>>
+    public class OpenApiQueryResultConverter<T> : JsonConverter<Multiple<T>>
     {
         private const string ResultCountPropertyName = "@odata.count";
         private const string ResultValuesPropertyName = "value";
@@ -16,7 +16,7 @@ namespace OpenApiQuery.Serialization.SystemText
             _typeHandler = typeHandler;
         }
 
-        public override OpenApiQueryResult<T> Read(
+        public override Multiple<T> Read(
             ref Utf8JsonReader reader,
             Type typeToConvert,
             JsonSerializerOptions options)
@@ -28,7 +28,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
             var actualClrType = typeof(T);
 
-            var result = new OpenApiQueryResult<T>();
+            var result = new Multiple<T>();
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
@@ -69,7 +69,7 @@ namespace OpenApiQuery.Serialization.SystemText
                         }
 
                         var document = JsonDocument.ParseValue(ref reader);
-                        result.ResultItems = (T[])JsonHelper.ReadValue(document.RootElement,
+                        result.Items = (T[])JsonHelper.ReadValue(document.RootElement,
                             null,
                             actualClrType.MakeArrayType(),
                             _typeHandler
@@ -84,7 +84,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
         public override void Write(
             Utf8JsonWriter writer,
-            OpenApiQueryResult<T> value,
+            Multiple<T> value,
             JsonSerializerOptions options)
         {
             writer.WriteStartObject();
@@ -98,7 +98,7 @@ namespace OpenApiQuery.Serialization.SystemText
 
             var itemType = _typeHandler.ResolveType(typeof(T));
             var selectClause = value.Options?.SelectExpand.RootSelectClause;
-            JsonHelper.WriteArray(writer, value.ResultItems, itemType, selectClause, _typeHandler, options);
+            JsonHelper.WriteArray(writer, value.Items, itemType, selectClause, _typeHandler, options);
 
             writer.WriteEndObject();
         }

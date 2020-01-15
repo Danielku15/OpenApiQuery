@@ -31,7 +31,7 @@ namespace OpenApiQuery.Test
             };
         }
 
-        public static async Task<OpenApiQueryResult<T>> GetQueryAsync<T>(
+        public static async Task<Multiple<T>> GetQueryAsync<T>(
             this HttpClient client,
             string requestUri,
             IOpenApiTypeHandler typeHandler = null,
@@ -48,7 +48,7 @@ namespace OpenApiQuery.Test
             {
                 var options = (typeHandler != null && typeHandler != TypeHandler) ? BuildOptions(typeHandler) : Options;
                 await using var json = await response.Content.ReadAsStreamAsync();
-                return await JsonSerializer.DeserializeAsync<OpenApiQueryResult<T>>(json,
+                return await JsonSerializer.DeserializeAsync<Multiple<T>>(json,
                     options.JsonSerializerOptions,
                     cancellationToken);
             }
@@ -59,7 +59,7 @@ namespace OpenApiQuery.Test
                 throw;
             }
         }
-        public static async Task<OpenApiQuerySingleResult<T>> GetSingleQueryAsync<T>(
+        public static async Task<Single<T>> GetSingleQueryAsync<T>(
             this HttpClient client,
             string requestUri,
             IOpenApiTypeHandler typeHandler = null,
@@ -72,7 +72,7 @@ namespace OpenApiQuery.Test
             try
             {
                 var options = (typeHandler != null && typeHandler != TypeHandler) ? BuildOptions(typeHandler) : Options;
-                return await JsonSerializer.DeserializeAsync<OpenApiQuerySingleResult<T>>(json,
+                return await JsonSerializer.DeserializeAsync<Single<T>>(json,
                     options.JsonSerializerOptions,
                     cancellationToken);
             }

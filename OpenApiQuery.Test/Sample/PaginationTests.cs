@@ -29,7 +29,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}");
-            Assert.AreEqual(testUserCount - skipCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount - skipCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -41,7 +41,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?skip={skipCount}");
-            Assert.AreEqual(testUserCount - skipCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount - skipCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -53,7 +53,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}");
-            Assert.AreEqual(0, response.ResultItems.Length);
+            Assert.AreEqual(0, response.Items.Length);
         }
 
         [TestMethod]
@@ -65,7 +65,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$top={topCount}");
-            Assert.AreEqual(topCount, response.ResultItems.Length);
+            Assert.AreEqual(topCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -77,7 +77,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$top={skipCount}");
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Items.Length);
         }
 
         [TestMethod]
@@ -101,7 +101,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}&$top={topCount}");
-            Assert.AreEqual(topCount, response.ResultItems.Length);
+            Assert.AreEqual(topCount, response.Items.Length);
         }
 
 
@@ -115,7 +115,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}&$top={topCount}");
-            Assert.AreEqual(5, response.ResultItems.Length);
+            Assert.AreEqual(5, response.Items.Length);
         }
 
         [TestMethod]
@@ -128,7 +128,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}&$top={topCount}");
-            Assert.AreEqual(0, response.ResultItems.Length);
+            Assert.AreEqual(0, response.Items.Length);
         }
 
 

@@ -63,7 +63,7 @@ namespace OpenApiQuery
         {
         }
 
-        public async Task<OpenApiQueryResult<T>> ApplyToAsync(
+        public async Task<Multiple<T>> ApplyToAsync(
             IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
@@ -88,10 +88,10 @@ namespace OpenApiQuery
 
             var result = await queryable.ToArrayAsync(cancellationToken);
 
-            return new OpenApiQueryResult<T>(this, result, count);
+            return new Multiple<T>(this, result, count);
         }
 
-        public async Task<OpenApiQuerySingleResult<T>> ApplyToSingleAsync(
+        public async Task<Single<T>> ApplyToSingleAsync(
             IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
@@ -99,14 +99,14 @@ namespace OpenApiQuery
 
             var result = await queryable.SingleOrDefaultAsync(cancellationToken);
 
-            return new OpenApiQuerySingleResult<T>(this, result);
+            return new Single<T>(this, result);
         }
 
-        public OpenApiQuerySingleResult<T> ApplyToSingle(
+        public Single<T> ApplyToSingle(
             T item,
             CancellationToken cancellationToken)
         {
-            return new OpenApiQuerySingleResult<T>(this, item);
+            return new Single<T>(this, item);
         }
     }
 }
