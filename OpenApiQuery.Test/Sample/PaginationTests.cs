@@ -19,7 +19,7 @@ namespace OpenApiQuery.Test.Sample
             using var response = await client.GetAsync("/users?$skip=1&$skip=2");
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
-        
+
         [TestMethod]
         public async Task TestSkip_InRange_ReturnsRest()
         {
@@ -31,7 +31,19 @@ namespace OpenApiQuery.Test.Sample
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}");
             Assert.AreEqual(testUserCount - skipCount, response.ResultItems.Length);
         }
-        
+
+        [TestMethod]
+        public async Task TestSkip_InRange_NoDollar_ReturnsRest()
+        {
+            const int testUserCount = 10;
+            const int skipCount = 3;
+            using var server = SetupSample(Enumerable.Range(1, testUserCount).Select(i => new User()));
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>($"/users?skip={skipCount}");
+            Assert.AreEqual(testUserCount - skipCount, response.ResultItems.Length);
+        }
+
         [TestMethod]
         public async Task TestSkip_OutOfRange_ReturnsEmpty()
         {
@@ -43,7 +55,7 @@ namespace OpenApiQuery.Test.Sample
             var response = await client.GetQueryAsync<User>($"/users?$skip={skipCount}");
             Assert.AreEqual(0, response.ResultItems.Length);
         }
-        
+
         [TestMethod]
         public async Task TestTop_InRange_ReturnsTop()
         {
@@ -55,7 +67,7 @@ namespace OpenApiQuery.Test.Sample
             var response = await client.GetQueryAsync<User>($"/users?$top={topCount}");
             Assert.AreEqual(topCount, response.ResultItems.Length);
         }
-        
+
         [TestMethod]
         public async Task TestTop_OutOfRange_ReturnsAll()
         {
@@ -78,7 +90,7 @@ namespace OpenApiQuery.Test.Sample
             using var response = await client.GetAsync("/users?$top=1&$top=2");
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
-        
+
         [TestMethod]
         public async Task TestSkipTop_InRange_ReturnsItems()
         {

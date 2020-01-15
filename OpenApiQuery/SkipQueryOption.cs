@@ -41,16 +41,18 @@ namespace OpenApiQuery
 
         public void Initialize(HttpContext httpContext, ModelStateDictionary modelState)
         {
-            if (httpContext.Request.Query.TryGetValue("$skip", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.SkipKeys, out var values))
             {
-                if (values.Count == 1)
+                using var enumerator = values.GetEnumerator();
+                if (enumerator.MoveNext())
                 {
-                    Initialize(values[0], modelState);
-                }
-                else
-                {
-                    modelState.TryAddModelError("$skip",
-                        "Multiple skip clauses found, only one can be specified.");
+                    Initialize(enumerator.Current, modelState);
+
+                    if (enumerator.MoveNext())
+                    {
+                        modelState.TryAddModelError(QueryOptionKeys.SkipKeys.First(),
+                            "Multiple skip clauses found, only one can be specified.");
+                    }
                 }
             }
         }
@@ -64,8 +66,8 @@ namespace OpenApiQuery
             }
             else
             {
-                modelState.TryAddModelError("$skip",
-                    "Invalid value specified for $skip, must be number.");
+                modelState.TryAddModelError(QueryOptionKeys.SkipKeys.First(),
+                    "Invalid value specified for skip, must be number.");
             }
         }
     }

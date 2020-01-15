@@ -43,16 +43,18 @@ namespace OpenApiQuery
 
         public void Initialize(HttpContext httpContext, ModelStateDictionary modelState)
         {
-            if (httpContext.Request.Query.TryGetValue("$top", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.TopKeys, out var values))
             {
-                if (values.Count == 1)
+                using var enumerator = values.GetEnumerator();
+                if (enumerator.MoveNext())
                 {
-                    Initialize(values[0], modelState);
-                }
-                else
-                {
-                    modelState.TryAddModelError("$top",
-                        "Multiple top clauses found, only one can be specified.");
+                    Initialize(enumerator.Current, modelState);
+
+                    if (enumerator.MoveNext())
+                    {
+                        modelState.TryAddModelError(QueryOptionKeys.TopKeys.First(),
+                            "Multiple top clauses found, only one can be specified.");
+                    }
                 }
             }
         }
@@ -66,8 +68,8 @@ namespace OpenApiQuery
             }
             else
             {
-                modelState.TryAddModelError("$top",
-                    "Invalid value specified for $top, must be number.");
+                modelState.TryAddModelError(QueryOptionKeys.TopKeys.First(),
+                    "Invalid value specified for top, must be number.");
             }
         }
     }

@@ -20,7 +20,7 @@ namespace OpenApiQuery.Test.Sample
             Assert.IsNull(response.TotalCount, "response.TotalCount == null");
             Assert.AreEqual(testUserCount, response.ResultItems.Length);
         }
-        
+
         [TestMethod]
         public async Task TestCount_MultipleTimes_BadRequest()
         {
@@ -55,7 +55,19 @@ namespace OpenApiQuery.Test.Sample
             Assert.AreEqual(testUserCount, response.TotalCount);
             Assert.AreEqual(testUserCount, response.ResultItems.Length);
         }
-        
+
+        [TestMethod]
+        public async Task TestCount_WithTrueInQuery_NoDollar_MustContainCount()
+        {
+            const int testUserCount = 10;
+            using var server = SetupSample(Enumerable.Range(1, testUserCount).Select(i => new User()));
+            using var client = server.CreateClient();
+
+            var response = await client.GetQueryAsync<User>("/users?count=true");
+            Assert.AreEqual(testUserCount, response.TotalCount);
+            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+        }
+
         [TestMethod]
         public async Task TestCount_WithPaging_MustContainTotalValue()
         {

@@ -50,7 +50,7 @@ namespace OpenApiQuery
         private void InitializeSelect(HttpContext httpContext, ILogger logger,
             ModelStateDictionary modelStateDictionary)
         {
-            if (httpContext.Request.Query.TryGetValue("$select", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.SelectKeys, out var values))
             {
                 var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                 foreach (var value in values)
@@ -62,8 +62,8 @@ namespace OpenApiQuery
                     }
                     catch (Exception e)
                     {
-                        logger.LogError(e, "failed to parse $select clause");
-                        modelStateDictionary.TryAddModelException("$select", e);
+                        logger.LogError(e, "failed to parse select clause");
+                        modelStateDictionary.TryAddModelException(QueryOptionKeys.SelectKeys.First(), e);
                     }
                 }
             }
@@ -72,7 +72,7 @@ namespace OpenApiQuery
         private void InitializeExpand(HttpContext httpContext, ILogger logger,
             ModelStateDictionary modelStateDictionary)
         {
-            if (httpContext.Request.Query.TryGetValue("$expand", out var values))
+            if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.ExpandKeys, out var values))
             {
                 var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
                 foreach (var value in values)
@@ -84,8 +84,8 @@ namespace OpenApiQuery
                     }
                     catch (Exception e)
                     {
-                        logger.LogError(e, "failed to parse $expand clause");
-                        modelStateDictionary.TryAddModelException("$expand", e);
+                        logger.LogError(e, "failed to parse expand clause");
+                        modelStateDictionary.TryAddModelException(QueryOptionKeys.ExpandKeys.First(), e);
                     }
                 }
             }
@@ -275,26 +275,30 @@ namespace OpenApiQuery
                     var option = (string) _parser.TokenData;
 
                     Action<ExpandClause> handler;
-                    switch(option)
+
+                    if (QueryOptionKeys.FilterKeys.Contains(option))
                     {
-                        case "$filter":
-                            handler = ExpandFilter;
-                            break;
-                        case "$expand":
-                            handler = NestedExpand;
-                            break;
-                        case "$orderby":
-                            handler = ExpandOrder;
-                            break;
-                        case "$top":
-                            handler = ExpandTop;
-                            break;
-                        case "$skip":
-                            handler = ExpandSkip;
-                            break;
-                        default:
-                            handler = null;
-                            break;
+                        handler = ExpandFilter;
+                    }
+                    else if (QueryOptionKeys.ExpandKeys.Contains(option))
+                    {
+                        handler = NestedExpand;
+                    }
+                    else if (QueryOptionKeys.OrderbyKeys.Contains(option))
+                    {
+                        handler = ExpandOrder;
+                    }
+                    else if (QueryOptionKeys.TopKeys.Contains(option))
+                    {
+                        handler = ExpandTop;
+                    }
+                    else if (QueryOptionKeys.SkipKeys.Contains(option))
+                    {
+                        handler = ExpandSkip;
+                    }
+                    else
+                    {
+                        handler = null;
                     }
 
                     if (handler != null)
