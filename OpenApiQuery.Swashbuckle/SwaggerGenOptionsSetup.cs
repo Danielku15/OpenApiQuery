@@ -9,9 +9,8 @@ namespace OpenApiQuery.Swashbuckle
     {
         public void Configure(SwaggerGenOptions options)
         {
-            options.MapType<OpenApiQueryOptions>(()=>new OpenApiSchema
+            options.MapType<OpenApiQueryOptions>(() => new OpenApiSchema
             {
-
             });
         }
     }

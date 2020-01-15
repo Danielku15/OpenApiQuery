@@ -65,7 +65,8 @@ namespace OpenApiQuery.Parsing
             _nameToTypeCache = new Dictionary<string, Type>();
             _typeCache = new HashSet<Type>();
 
-            var apiDescriptionGroupCollectionProvider = _serviceProvider.GetRequiredService<IApiDescriptionGroupCollectionProvider>();
+            var apiDescriptionGroupCollectionProvider =
+                _serviceProvider.GetRequiredService<IApiDescriptionGroupCollectionProvider>();
             var groups = apiDescriptionGroupCollectionProvider.ApiDescriptionGroups;
             foreach (var group in groups.Items)
             {
@@ -94,6 +95,14 @@ namespace OpenApiQuery.Parsing
         private void RegisterType(Type clrType)
         {
             if (typeof(OpenApiQueryOptions).IsAssignableFrom(clrType) && clrType.IsGenericType)
+            {
+                RegisterType(clrType.GetGenericArguments()[0]);
+            }
+            else if (clrType.IsGenericType &&
+                     (clrType.GetGenericTypeDefinition() == typeof(Single<>) ||
+                      clrType.GetGenericTypeDefinition() == typeof(Multiple<>) ||
+                      clrType.GetGenericTypeDefinition() == typeof(Delta<>))
+            )
             {
                 RegisterType(clrType.GetGenericArguments()[0]);
             }
