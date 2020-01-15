@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace OpenApiQuery.Swashbuckle
@@ -9,9 +8,9 @@ namespace OpenApiQuery.Swashbuckle
     {
         public void Configure(SwaggerGenOptions options)
         {
-            options.MapType<OpenApiQueryOptions>(() => new OpenApiSchema
-            {
-            });
+            options.OperationFilter<QueryOptionsOperationFilter>();
+            options.OperationFilter<SingleDeltaOperationFilter>();
+            options.SchemaFilter<OpenApiQueryTypesSchemaFilter>();
         }
     }
 }

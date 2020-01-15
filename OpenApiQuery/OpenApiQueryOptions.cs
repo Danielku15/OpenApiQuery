@@ -26,7 +26,6 @@ namespace OpenApiQuery
 
         public Type ElementType { get; }
 
-        public bool NeedsPolymorphism { get; set; }
         internal HttpContext HttpContext { get; set; }
         internal ModelStateDictionary ModelState { get; set; }
 

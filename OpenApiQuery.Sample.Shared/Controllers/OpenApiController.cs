@@ -31,7 +31,7 @@ namespace OpenApiQuery.Sample.Controllers
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAsync(
-            int id,
+            [FromRoute] int id,
             OpenApiQueryOptions<T> queryOptions,
             CancellationToken cancellationToken)
         {
@@ -48,7 +48,7 @@ namespace OpenApiQuery.Sample.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAsync(Single<T> item, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostAsync([FromBody] Single<T> item, CancellationToken cancellationToken)
         {
             var value = item.ResultItem;
             await _records.AddAsync(value, cancellationToken);
@@ -64,7 +64,7 @@ namespace OpenApiQuery.Sample.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAsync(int id, Delta<T> value, CancellationToken cancellationToken)
+        public async Task<IActionResult> PatchAsync([FromRoute] int id, [FromBody] Delta<T> value, CancellationToken cancellationToken)
         {
             var current = await _records.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
             if (current == null)
