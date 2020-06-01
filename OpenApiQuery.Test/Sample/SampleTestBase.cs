@@ -23,6 +23,8 @@ namespace OpenApiQuery.Test.Sample
             builder.ConfigureServices(s =>
             {
                 s.AddDbContext<BlogDbContext>(o => o.UseInMemoryDatabase(databaseName));
+                s.AddMvc()
+                    .AddNewtonsoftJson();
             });
             setup?.Invoke(builder);
 

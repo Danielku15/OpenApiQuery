@@ -153,7 +153,7 @@ namespace OpenApiQuery.Test.Sample
             foreach (var item in Value.EnumerateArray())
             {
                 Assert.AreEqual("firstname,email",
-                    string.Join(",", item.EnumerateObject().Select(o => o.Name.ToLowerInvariant())));
+                    item.EnumerateObject().Where(o => o.Value.ValueKind != JsonValueKind.Null).Select(o => o.Name.ToLowerInvariant()));
             }
         }
 
@@ -264,7 +264,7 @@ namespace OpenApiQuery.Test.Sample
             foreach (var item in blogs.EnumerateArray())
             {
                 Assert.AreEqual("name",
-                    string.Join(",", item.EnumerateObject().Select(o => o.Name.ToLowerInvariant())));
+                    item.EnumerateObject().Where(o => o.Value.ValueKind != JsonValueKind.Null).Select(o => o.Name.ToLowerInvariant()));
             }
         }
 

@@ -83,11 +83,13 @@ namespace OpenApiQuery.Test.Sample
             using var response = await client.GetAsync("/users/1?$select=firstName,email");
             response.EnsureSuccessStatusCode();
 
-            var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+            var json = await response.Content.ReadAsStringAsync();
+            var document = JsonDocument.Parse(json);
 
-            var item = document.RootElement;
+            var item = document.RootElement.GetProperty("value");
             Assert.AreEqual("firstname,email",
-                string.Join(",", item.EnumerateObject().Select(o => o.Name.ToLowerInvariant())));
+                string.Join(",",
+                    item.EnumerateObject().Where(o => o.Value.ValueKind != JsonValueKind.Null).Select(o => o.Name.ToLowerInvariant())));
         }
     }
 }
