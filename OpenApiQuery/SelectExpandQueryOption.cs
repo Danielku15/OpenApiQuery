@@ -79,7 +79,7 @@ namespace OpenApiQuery
             if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.ExpandKeys, out var values))
             {
                 var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
-                foreach (var value in values) // .SelectMany(x => x.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var value in values)
                 {
                     var parser = new ExpandClauseParser(binder, value, _expandClauses, modelStateDictionary);
                     try

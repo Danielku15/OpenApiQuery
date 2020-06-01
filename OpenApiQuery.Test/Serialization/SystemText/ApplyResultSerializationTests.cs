@@ -11,10 +11,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         [TestMethod]
         public void TestSerialize_Simple()
         {
-            var actual = new OpenApiQueryResult<SimpleClass>
-            {
-                Count = 2,
-                Value = new[]
+            var actual = new OpenApiQueryResult<SimpleClass>(2,
+                new[]
                 {
                     new SimpleClass
                     {
@@ -28,8 +26,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         DoubleProp = 47.12,
                         StringProp = "Foo Bar"
                     }
-                }
-            };
+                });
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,
@@ -56,9 +53,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         public void TestSerialize_Polymorphic()
         {
             var actual = new OpenApiQueryResult<Base>
-            {
-                Count = 2,
-                Value = new Base[]
+            (2,
+                new Base[]
                 {
                     new Sub1
                     {
@@ -73,7 +69,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         SubProp = -47
                     }
                 }
-            };
+            );
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,
@@ -102,9 +98,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         public void TestSerialize_ObjectArrays()
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<SimpleClass>>
-            {
-                Count = 4,
-                Value = new[]
+            (4,
+                new[]
                 {
                     new ArrayWrapper<SimpleClass>
                     {
@@ -143,7 +138,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         }
                     }
                 }
-            };
+            );
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 4,
@@ -194,9 +189,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         public void TestSerialize_ObjectArrays_Polymorphic()
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<Base>>
-            {
-                Count = 4,
-                Value = new[]
+            (4,
+                new[]
                 {
                     new ArrayWrapper<Base>
                     {
@@ -235,7 +229,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         }
                     },
                 }
-            };
+            );
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 4,
@@ -327,13 +321,12 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         public void TestSerialize_NativeArrays<T>(T[][] items)
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<T>>
-            {
-                Count = 4,
-                Value = items.Select(i => new ArrayWrapper<T>
+            (4,
+                items.Select(i => new ArrayWrapper<T>
                 {
                     Items = i
                 }).ToArray()
-            };
+            );
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 4,
@@ -349,9 +342,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         public void TestSerialize_Dictionary_SimpleTypes()
         {
             var actual = new OpenApiQueryResult<Dictionary<string, int>>
-            {
-                Count = 2,
-                Value = new[]
+            (2,
+                new[]
                 {
                     new Dictionary<string, int>
                     {
@@ -366,7 +358,7 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         ["f"] = 6
                     }
                 }
-            };
+            );
             VerifySerialize(new Dictionary<string, object>
                 {
                     ["@odata.count"] = 2,

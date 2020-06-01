@@ -7,19 +7,14 @@ namespace OpenApiQuery
     public class OpenApiQueryResult<T>
     {
         [DataMember(Name = "@odata.count", EmitDefaultValue = false)]
-        public long? Count { get; set; }
+        public long? Count { get; }
         [DataMember(Name = "value")]
-        public IReadOnlyCollection<T> Value { get; set; }
+        public IReadOnlyCollection<T> Value { get; }
 
         public OpenApiQueryResult(long? count, IReadOnlyCollection<T> value)
         {
             Count = count;
             Value = value;
-        }
-
-        public OpenApiQueryResult()
-        {
-
         }
     }
 }
