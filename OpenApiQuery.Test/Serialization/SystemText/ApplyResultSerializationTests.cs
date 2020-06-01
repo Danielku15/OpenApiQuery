@@ -13,8 +13,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<SimpleClass>
             {
-                TotalCount = 2,
-                ResultItems = new[]
+                Count = 2,
+                Value = new[]
                 {
                     new SimpleClass
                     {
@@ -57,8 +57,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<Base>
             {
-                TotalCount = 2,
-                ResultItems = new Base[]
+                Count = 2,
+                Value = new Base[]
                 {
                     new Sub1
                     {
@@ -103,8 +103,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<SimpleClass>>
             {
-                TotalCount = 4,
-                ResultItems = new[]
+                Count = 4,
+                Value = new[]
                 {
                     new ArrayWrapper<SimpleClass>
                     {
@@ -195,8 +195,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<Base>>
             {
-                TotalCount = 4,
-                ResultItems = new[]
+                Count = 4,
+                Value = new[]
                 {
                     new ArrayWrapper<Base>
                     {
@@ -328,8 +328,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<ArrayWrapper<T>>
             {
-                TotalCount = 4,
-                ResultItems = items.Select(i => new ArrayWrapper<T>
+                Count = 4,
+                Value = items.Select(i => new ArrayWrapper<T>
                 {
                     Items = i
                 }).ToArray()
@@ -350,8 +350,8 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var actual = new OpenApiQueryResult<Dictionary<string, int>>
             {
-                TotalCount = 2,
-                ResultItems = new[]
+                Count = 2,
+                Value = new[]
                 {
                     new Dictionary<string, int>
                     {
@@ -383,288 +383,6 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                             ["d"] = 4,
                             ["E"] = 5,
                             ["f"] = 6
-                        }
-                    }
-                },
-                actual);
-        }
-
-        [TestMethod]
-        public void TestSerialize_PartialProperties()
-        {
-            var actual = new OpenApiQueryResult<SimpleClass>
-            {
-                Options = new OpenApiQueryOptions<SimpleClass>
-                {
-                    SelectExpand =
-                    {
-                        RootSelectClause =
-                        {
-                            IsStarSelect = false,
-                            SelectClauses = new Dictionary<PropertyInfo, SelectClause>
-                            {
-                                [typeof(SimpleClass).GetProperty(nameof(SimpleClass.IntProp))] = new SelectClause(),
-                                [typeof(SimpleClass).GetProperty(nameof(SimpleClass.StringProp))] = new SelectClause()
-                            }
-                        }
-                    }
-                },
-                TotalCount = 2,
-                ResultItems = new[]
-                {
-                    new SimpleClass
-                    {
-                        IntProp = 1,
-                        DoubleProp = 47.11,
-                        StringProp = "Hello World"
-                    },
-                    new SimpleClass
-                    {
-                        IntProp = 2,
-                        DoubleProp = 47.12,
-                        StringProp = "Foo Bar"
-                    }
-                }
-            };
-            VerifySerialize(new Dictionary<string, object>
-                {
-                    ["@odata.count"] = 2,
-                    ["value"] = new[]
-                    {
-                        new
-                        {
-                            intProp = 1,
-                            stringProp = "Hello World"
-                        },
-                        new
-                        {
-                            intProp = 2,
-                            stringProp = "Foo Bar"
-                        }
-                    }
-                },
-                actual);
-        }
-
-        [TestMethod]
-        public void TestSerialize_PartialNavigationProperties_Single()
-        {
-            var actual = new OpenApiQueryResult<SimpleNavigation>
-            {
-                Options = new OpenApiQueryOptions<SimpleNavigation>
-                {
-                    SelectExpand =
-                    {
-                        RootSelectClause =
-                        {
-                            IsStarSelect = false,
-                            SelectClauses = new Dictionary<PropertyInfo, SelectClause>
-                            {
-                                [typeof(SimpleNavigation).GetProperty(nameof(SimpleNavigation.Nav1))] = new SelectClause
-                                {
-                                    IsStarSelect = true
-                                },
-                                [typeof(SimpleNavigation).GetProperty(nameof(SimpleNavigation.Nav2))] = new SelectClause
-                                {
-                                    IsStarSelect = false,
-                                    SelectClauses = new Dictionary<PropertyInfo, SelectClause>
-                                    {
-                                        [typeof(SimpleClass).GetProperty(nameof(SimpleClass.StringProp))] =
-                                            new SelectClause()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                TotalCount = 2,
-                ResultItems = new[]
-                {
-                    new SimpleNavigation
-                    {
-                        Nav1 = new SimpleClass
-                        {
-                            IntProp = 1,
-                            DoubleProp = 47.11,
-                            StringProp = "A"
-                        },
-                        Nav2 = new SimpleClass
-                        {
-                            IntProp = 2,
-                            DoubleProp = 47.12,
-                            StringProp = "B"
-                        },
-                        Nav3 = new SimpleClass
-                        {
-                            IntProp = 3,
-                            DoubleProp = 47.13,
-                            StringProp = "C"
-                        },
-                    },
-                    new SimpleNavigation
-                    {
-                        Nav1 = new SimpleClass
-                        {
-                            IntProp = 4,
-                            DoubleProp = 47.14,
-                            StringProp = "D"
-                        },
-                        Nav2 = null,
-                        Nav3 = new SimpleClass
-                        {
-                            IntProp = 6,
-                            DoubleProp = 47.15,
-                            StringProp = "F"
-                        },
-                    }
-                }
-            };
-            VerifySerialize(new Dictionary<string, object>
-                {
-                    ["@odata.count"] = 2,
-                    ["value"] = new[]
-                    {
-                        new
-                        {
-                            nav1 = new
-                            {
-                                intProp = 1,
-                                doubleProp = 47.11,
-                                stringProp = "A",
-                            },
-                            nav2 = (object)new
-                            {
-                                stringProp = "B",
-                            }
-                        },
-                        new
-                        {
-                            nav1 = new
-                            {
-                                intProp = 4,
-                                doubleProp = 47.14,
-                                stringProp = "D",
-                            },
-                            nav2 = (object)null
-                        }
-                    }
-                },
-                actual);
-        }
-
-        [TestMethod]
-        public void TestSerialize_PartialNavigationProperties_Collection()
-        {
-            var actual = new OpenApiQueryResult<CollectionNavigation>
-            {
-                Options = new OpenApiQueryOptions<CollectionNavigation>
-                {
-                    SelectExpand =
-                    {
-                        RootSelectClause =
-                        {
-                            IsStarSelect = false,
-                            SelectClauses = new Dictionary<PropertyInfo, SelectClause>
-                            {
-                                [typeof(CollectionNavigation).GetProperty(nameof(CollectionNavigation.Nav1))] =
-                                    new SelectClause
-                                    {
-                                        IsStarSelect = true
-                                    },
-                                [typeof(CollectionNavigation).GetProperty(nameof(CollectionNavigation.Nav2))] =
-                                    new SelectClause
-                                    {
-                                        IsStarSelect = false,
-                                        SelectClauses = new Dictionary<PropertyInfo, SelectClause>
-                                        {
-                                            [typeof(SimpleClass).GetProperty(nameof(SimpleClass.StringProp))] =
-                                                new SelectClause()
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                },
-                TotalCount = 2,
-                ResultItems = new[]
-                {
-                    new CollectionNavigation
-                    {
-                        Nav1 = new[]
-                        {
-                            new SimpleClass
-                            {
-                                IntProp = 1,
-                                DoubleProp = 47.11,
-                                StringProp = "A"
-                            },
-                            new SimpleClass
-                            {
-                                IntProp = 2,
-                                DoubleProp = 47.12,
-                                StringProp = "B"
-                            }
-                        },
-                        Nav2 = null,
-                        Nav3 = new[]
-                        {
-                            new SimpleClass
-                            {
-                                IntProp = 3,
-                                DoubleProp = 47.13,
-                                StringProp = "C"
-                            }
-                        }
-                    },
-                    new CollectionNavigation
-                    {
-                        Nav1 = new SimpleClass[0],
-                        Nav2 = new[]
-                        {
-                            new SimpleClass
-                            {
-                                IntProp = 4,
-                                DoubleProp = 47.14,
-                                StringProp = "D"
-                            }
-                        }
-                    }
-                }
-            };
-            VerifySerialize(new Dictionary<string, object>
-                {
-                    ["@odata.count"] = 2,
-                    ["value"] = new[]
-                    {
-                        new
-                        {
-                            nav1 = new object[]
-                            {
-                                new
-                                {
-                                    intProp = 1,
-                                    doubleProp = 47.11,
-                                    stringProp = "A"
-                                },
-                                new
-                                {
-                                    intProp = 2,
-                                    doubleProp = 47.12,
-                                    stringProp = "B"
-                                }
-                            },
-                            nav2 = (object)null
-                        },
-                        new
-                        {
-                            nav1 = new object[0],
-                            nav2 = (object)new[]
-                            {
-                                new
-                                {
-                                    stringProp = "D"
-                                }
-                            }
                         }
                     }
                 },

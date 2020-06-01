@@ -15,6 +15,7 @@ namespace OpenApiQuery
         public Type ItemType { get; }
 
         // additional expand options
+        public SelectQueryOption Select { get; set; }
         public FilterQueryOption Filter { get; set; }
         public OrderByQueryOption Orderby { get; set; }
         public TopQueryOption Top { get; set; }
@@ -41,6 +42,10 @@ namespace OpenApiQuery
                 // NavigationProperty = it.NavigationProperty.Select( arg => new Item { ... } ).ToList()
 
                 // apply all constraints
+                if (Select != null)
+                {
+                    navigationProperty = Select.ApplyTo(navigationProperty);
+                }
                 if (Orderby != null)
                 {
                     navigationProperty = Orderby.ApplyTo(navigationProperty);
@@ -123,10 +128,14 @@ namespace OpenApiQuery
                     // Prop3 = arg.Prop3.Select( arg1 => new SubItem { SubProp1 = arg1.SubProp1 } ).ToList()
                     if (select?.SelectClauses == null || !select.SelectClauses.TryGetValue(property, out var subSelect))
                     {
-                        subSelect = new SelectClause
+                        subSelect = expand.Select switch
                         {
-                            SelectedMember = property,
-                            IsStarSelect = true
+                            { } expandSelect => expandSelect.SelectClause,
+                            _ => new SelectClause
+                            {
+                                SelectedMember = property,
+                                IsStarSelect = true
+                            }
                         };
                     }
                     memberBindings.Add(expand.ToMemberBinding(source, subSelect));

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -32,9 +31,9 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetSingleQueryAsync<User>("/users/1?$select=firstName,email");
-            Assert.AreEqual("A", response.ResultItem.FirstName);
-            Assert.AreEqual(null, response.ResultItem.LastName);
-            Assert.AreEqual("C", response.ResultItem.EMail);
+            Assert.AreEqual("A", response.Value.FirstName);
+            Assert.AreEqual(null, response.Value.LastName);
+            Assert.AreEqual("C", response.Value.EMail);
         }
 
         [TestMethod]

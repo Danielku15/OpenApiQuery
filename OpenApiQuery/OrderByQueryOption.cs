@@ -20,7 +20,7 @@ namespace OpenApiQuery
         public OrderByQueryOption(Type elementType)
         {
             Clauses = new List<OrderByClause>();
-            Parameter = Expression.Parameter(elementType);
+            Parameter = Expression.Parameter(elementType, "it");
         }
 
         public IQueryable<T> ApplyTo<T>(IQueryable<T> queryable)

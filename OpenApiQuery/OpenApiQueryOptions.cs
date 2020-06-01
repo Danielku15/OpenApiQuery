@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -54,12 +55,43 @@ namespace OpenApiQuery
         }
     }
 
-    [OpenApiQueryParameterBindingAttribute]
-    public class OpenApiQueryOptions<T> : OpenApiQueryOptions
+    [OpenApiQueryParameterBinding]
+    public class OpenApiQueryOptions<T, TMaterializer> : OpenApiQueryOptions
+        where TMaterializer : struct, IMaterializer
     {
         public OpenApiQueryOptions()
             : base(typeof(T))
         {
+        }
+
+        public async Task<OpenApiQueryResult<T>> ApplyToAsync<TSource>(
+            IQueryable<TSource> documentQueryable,
+            Expression<Func<TSource, T>> map,
+            CancellationToken cancellationToken)
+        {
+            //// The order of applying the items to the queryable is important
+
+            //// 1. include all related items for further query option
+            var selectClause = SelectExpand.GetSelectClause<T>();
+            var expression = ExpressionHelper.Compose(map, selectClause);
+            var queryable = documentQueryable.Select(expression);
+
+            //// 2. sort to have the correct order for filtering and limiting
+            queryable = OrderBy.ApplyTo(queryable);
+            // 3. filter the items according to the user input
+            queryable = Filter.ApplyTo(queryable);
+
+            var count = Count.Value ?? false
+                ? await default(TMaterializer).LongCountAsync(queryable, cancellationToken)
+                : default(long?);
+
+            // 4. apply paging on the sorted and filtered result.
+            queryable = Skip.ApplyTo(queryable);
+            queryable = Top.ApplyTo(queryable);
+
+            var result = await default(TMaterializer).MaterializeAsync(queryable, cancellationToken);
+
+            return new OpenApiQueryResult<T>(count, result);
         }
 
         public async Task<OpenApiQueryResult<T>> ApplyToAsync(
@@ -75,19 +107,17 @@ namespace OpenApiQuery
             // 3. filter the items according to the user input
             queryable = Filter.ApplyTo(queryable);
 
-            long? count = null;
-            if (Count.Value == true)
-            {
-                count = await queryable.LongCountAsync(cancellationToken);
-            }
+            var count = Count.Value ?? false
+                ? await default(TMaterializer).LongCountAsync(queryable, cancellationToken)
+                : default(long?);
 
             // 4. apply paging on the sorted and filtered result.
             queryable = Skip.ApplyTo(queryable);
             queryable = Top.ApplyTo(queryable);
 
-            var result = await queryable.ToArrayAsync(cancellationToken);
+            var result = await default(TMaterializer).MaterializeAsync(queryable, cancellationToken);
 
-            return new OpenApiQueryResult<T>(this, result, count);
+            return new OpenApiQueryResult<T>(count, result);
         }
 
         public async Task<OpenApiQuerySingleResult<T>> ApplyToSingleAsync(
@@ -96,9 +126,9 @@ namespace OpenApiQuery
         {
             queryable = SelectExpand.ApplyTo(queryable);
 
-            var result = await queryable.SingleOrDefaultAsync(cancellationToken);
+            var result = await default(TMaterializer).SingleOrDefaultAsync(queryable, cancellationToken);
 
-            return new OpenApiQuerySingleResult<T>(this, result);
+            return new OpenApiQuerySingleResult<T>(result);
         }
     }
 }

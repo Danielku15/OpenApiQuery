@@ -1,32 +1,16 @@
-using System;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using OpenApiQuery.Parsing;
-using OpenApiQuery.Serialization.SystemText;
-using OpenApiQuery.Test.Serialization.SystemText;
+using JsonException = System.Text.Json.JsonException;
 
 namespace OpenApiQuery.Test
 {
     public static class HttpClientExtensions
     {
         private static readonly DefaultOpenApiTypeHandler TypeHandler = new DefaultOpenApiTypeHandler();
-
-        private static readonly JsonOptions Options = new JsonOptions
-        {
-            JsonSerializerOptions =
-            {
-                Converters =
-                {
-                    new OpenApiQueryDeltaConverterFactory(TypeHandler),
-                    new OpenApiQueryResultConverterFactory(TypeHandler),
-                    new OpenApiQuerySingleResultConverterFactory(TypeHandler)
-                }
-            }
-        };
 
         public static async Task<OpenApiQueryResult<T>> GetQueryAsync<T>(
             this HttpClient client,
@@ -42,10 +26,8 @@ namespace OpenApiQuery.Test
 
             try
             {
-                await using var json = await response.Content.ReadAsStreamAsync();
-                return await JsonSerializer.DeserializeAsync<OpenApiQueryResult<T>>(json,
-                    Options.JsonSerializerOptions,
-                    cancellationToken);
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<OpenApiQueryResult<T>>(json);
             }
             catch (JsonException e)
             {
@@ -62,12 +44,10 @@ namespace OpenApiQuery.Test
             using var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            await using var json = await response.Content.ReadAsStreamAsync();
             try
             {
-                return await JsonSerializer.DeserializeAsync<OpenApiQuerySingleResult<T>>(json,
-                    Options.JsonSerializerOptions,
-                    cancellationToken);
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<OpenApiQuerySingleResult<T>>(json);
             }
             catch (JsonException e)
             {
@@ -84,12 +64,10 @@ namespace OpenApiQuery.Test
             using var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            await using var json = await response.Content.ReadAsStreamAsync();
             try
             {
-                return await JsonSerializer.DeserializeAsync<T>(json,
-                    Options.JsonSerializerOptions,
-                    cancellationToken);
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(json);
             }
             catch (JsonException e)
             {

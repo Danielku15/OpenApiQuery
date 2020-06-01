@@ -34,7 +34,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=username");
-            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -44,7 +44,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=username asc");
-            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -54,7 +54,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?orderby=username asc");
-            Assert.AreEqual("A,B,C,D", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -64,7 +64,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=username desc");
-            Assert.AreEqual("D,C,B,A", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("D,C,B,A", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -74,7 +74,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=firstName, username");
-            Assert.AreEqual("B,D,A,C", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("B,D,A,C", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -84,7 +84,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=firstName asc, username asc");
-            Assert.AreEqual("B,D,A,C", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("B,D,A,C", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -94,7 +94,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=firstName desc, username desc");
-            Assert.AreEqual("C,A,D,B", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("C,A,D,B", string.Join(",", response.Value.Select(u => u.Username)));
         }
 
         [TestMethod]
@@ -104,7 +104,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$orderby=firstName asc, username desc");
-            Assert.AreEqual("D,B,C,A", string.Join(",", response.ResultItems.Select(u => u.Username)));
+            Assert.AreEqual("D,B,C,A", string.Join(",", response.Value.Select(u => u.Username)));
         }
     }
 }

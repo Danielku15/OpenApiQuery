@@ -33,7 +33,9 @@ namespace OpenApiQuery.Sample
             });
 
             services.AddMvcCore()
-                .AddApiExplorer()
+                .AddApiExplorer();
+
+            services
                 .AddOpenApiQuery();
         }
 

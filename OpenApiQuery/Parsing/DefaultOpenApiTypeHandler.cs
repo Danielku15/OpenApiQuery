@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
 using OpenApiQuery.Utils;
 
 namespace OpenApiQuery.Parsing
@@ -41,8 +40,16 @@ namespace OpenApiQuery.Parsing
 
             if (!_typeByNameCache.TryGetValue(jsonName, out var type))
             {
-                // TOOD: how to resolve type correctly without security issues?
-                return null;
+                var allTypes = AppDomain.CurrentDomain
+                    .GetAssemblies()
+                    .SelectMany(x => x.DefinedTypes);
+                var foundType = allTypes
+                    .SingleOrDefault(x => x.FullName == jsonName);
+
+                if (foundType is { } t)
+                {
+                    _typeCache[t] = _typeByNameCache[jsonName] = type = BuildOpenApiType(t);
+                }
             }
 
             return type;
@@ -85,7 +92,7 @@ namespace OpenApiQuery.Parsing
 
         private static bool IsPropertyForApi(PropertyInfo propertyInfo)
         {
-            return propertyInfo.CanWrite && propertyInfo.GetCustomAttribute(typeof(JsonIgnoreAttribute)) == null;
+            return propertyInfo.CanWrite && propertyInfo.GetCustomAttribute(typeof(IgnoreDataMemberAttribute)) == null;
         }
 
         public PropertyInfo BindProperty(Expression instance, string memberName)
@@ -638,8 +645,6 @@ namespace OpenApiQuery.Parsing
                 default:
                     throw new BindException($"Could not find any function '{identifier}'");
             }
-
-            return null;
         }
 
         private Type ParseTargetType(Expression argument)

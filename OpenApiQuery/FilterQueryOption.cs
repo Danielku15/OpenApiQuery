@@ -21,7 +21,7 @@ namespace OpenApiQuery
 
         public FilterQueryOption(Type elementType)
         {
-            Parameter = Expression.Parameter(elementType);
+            Parameter = Expression.Parameter(elementType, "it");
         }
 
         public string RawValue { get; set; }

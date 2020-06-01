@@ -47,7 +47,7 @@ namespace OpenApiQuery
             private static bool IsQueryOptions(Type bindingContextModelType)
             {
                 return bindingContextModelType.IsGenericType &&
-                       bindingContextModelType.GetGenericTypeDefinition() == typeof(OpenApiQueryOptions<>);
+                       bindingContextModelType.GetGenericTypeDefinition() == typeof(OpenApiQueryOptions<,>);
             }
         }
     }

@@ -23,7 +23,7 @@ namespace OpenApiQuery
         public SelectExpandQueryOption(Type elementType)
         {
             _expandClauses = new Dictionary<PropertyInfo, ExpandClause>();
-            _parameter = Expression.Parameter(elementType);
+            _parameter = Expression.Parameter(elementType, "it");
             RootSelectClause = new SelectClause
             {
                 IsStarSelect = true
@@ -32,14 +32,18 @@ namespace OpenApiQuery
 
         public IQueryable<T> ApplyTo<T>(IQueryable<T> queryable)
         {
-            var selectClause = ExpandClause.BuildSelectLambdaExpression(
-                _parameter.Type,
-                RootSelectClause,
-                _expandClauses);
-            queryable = queryable.Select((Expression<Func<T, T>>) selectClause);
+            var selectClause = GetSelectClause<T>();
+            queryable = queryable.Select(selectClause);
 
             return queryable;
         }
+
+        public Expression<Func<T, T>> GetSelectClause<T>() =>
+            (Expression<Func<T, T>>)
+            ExpandClause.BuildSelectLambdaExpression(
+                _parameter.Type,
+                RootSelectClause,
+                _expandClauses);
 
         public void Initialize(HttpContext httpContext, ILogger logger, ModelStateDictionary modelStateDictionary)
         {
@@ -75,7 +79,7 @@ namespace OpenApiQuery
             if (httpContext.Request.Query.TryGetValues(QueryOptionKeys.ExpandKeys, out var values))
             {
                 var binder = httpContext.RequestServices.GetRequiredService<IOpenApiTypeHandler>();
-                foreach (var value in values)
+                foreach (var value in values) // .SelectMany(x => x.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     var parser = new ExpandClauseParser(binder, value, _expandClauses, modelStateDictionary);
                     try
@@ -86,109 +90,6 @@ namespace OpenApiQuery
                     {
                         logger.LogError(e, "failed to parse expand clause");
                         modelStateDictionary.TryAddModelException(QueryOptionKeys.ExpandKeys.First(), e);
-                    }
-                }
-            }
-        }
-
-
-        private class SelectClauseParser
-        {
-            private readonly QueryExpressionParser _parser;
-
-            public SelectClauseParser(IOpenApiTypeHandler binder, string value)
-            {
-                _parser = new QueryExpressionParser(value, binder);
-            }
-
-            public SelectClause Parse(ParameterExpression it)
-            {
-                var rootClause = new SelectClause
-                {
-                    // will have sub-clauses
-                    SelectClauses = new Dictionary<PropertyInfo, SelectClause>()
-                };
-                _parser.PushThis(it);
-                SelectItemList(rootClause);
-                _parser.PopThis();
-                return rootClause;
-            }
-
-            private void SelectItemList(SelectClause currentClause)
-            {
-                while (true)
-                {
-                    SelectItem(currentClause);
-                    if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Comma)
-                    {
-                        _parser.NextToken();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-
-            private void SelectItem(SelectClause currentClause)
-            {
-                switch (_parser.CurrentTokenKind)
-                {
-                    case QueryExpressionTokenKind.Star:
-                        _parser.NextToken();
-                        currentClause.IsStarSelect = true;
-                        break;
-                    case QueryExpressionTokenKind.Identifier:
-                    {
-                        var member = _parser.BindMember((string) _parser.TokenData) as PropertyInfo;
-                        if (member == null)
-                        {
-                            _parser.ReportError($"'{_parser.TokenData}' is not a valid property for selection");
-                            return;
-                        }
-
-                        _parser.NextToken();
-
-
-                        // not yet selected -> create subclause
-                        if (!currentClause.SelectClauses.TryGetValue(member, out var subClause))
-                        {
-                            subClause = new SelectClause();
-                            subClause.SelectedMember = member;
-                            currentClause.SelectClauses[member] = subClause;
-                        }
-
-
-                        // nested expression
-                        if (_parser.CurrentTokenKind == QueryExpressionTokenKind.Slash)
-                        {
-                            _parser.NextToken();
-
-                            // activate sub clauses
-                            subClause.SelectClauses = new Dictionary<PropertyInfo, SelectClause>();
-                            // parse next segment into this subclause
-                            if (IsNavigationProperty(member, out var expressionType, out _))
-                            {
-                                _parser.PushThis(Expression.Parameter(expressionType));
-                                SelectItem(subClause);
-                                _parser.PopThis();
-                            }
-                            else if(member.DeclaringType != null)
-                            {
-                                _parser.ReportError($"'{member.DeclaringType.FullName}.{member.Name}' is no navigation property, cannot expand with slash");
-                            }
-                            else
-                            {
-                                _parser.ReportError($"'{member.Name}' is no navigation property, cannot expand with slash");
-                            }
-                        }
-                        else
-                        {
-                            // $select=complexProperty/subproperty is equal to $select=complexProperty/subproperty/*
-                            subClause.IsStarSelect = true;
-                        }
-
-                        break;
                     }
                 }
             }
@@ -264,6 +165,10 @@ namespace OpenApiQuery
                     {
                         _parser.NextToken();
                         ExpandItemOptions(clause);
+                        if (_parser.CurrentTokenKind == QueryExpressionTokenKind.CloseParenthesis)
+                        {
+                            _parser.NextToken();
+                        }
                     }
                 }
             }
@@ -274,32 +179,16 @@ namespace OpenApiQuery
                 {
                     var option = (string) _parser.TokenData;
 
-                    Action<ExpandClause> handler;
-
-                    if (QueryOptionKeys.FilterKeys.Contains(option))
+                    Action<ExpandClause> handler = 0 switch
                     {
-                        handler = ExpandFilter;
-                    }
-                    else if (QueryOptionKeys.ExpandKeys.Contains(option))
-                    {
-                        handler = NestedExpand;
-                    }
-                    else if (QueryOptionKeys.OrderbyKeys.Contains(option))
-                    {
-                        handler = ExpandOrder;
-                    }
-                    else if (QueryOptionKeys.TopKeys.Contains(option))
-                    {
-                        handler = ExpandTop;
-                    }
-                    else if (QueryOptionKeys.SkipKeys.Contains(option))
-                    {
-                        handler = ExpandSkip;
-                    }
-                    else
-                    {
-                        handler = null;
-                    }
+                        _ when QueryOptionKeys.SelectKeys.Contains(option) => ExpandSelect,
+                        _ when QueryOptionKeys.FilterKeys.Contains(option) => ExpandFilter,
+                        _ when QueryOptionKeys.ExpandKeys.Contains(option) => NestedExpand,
+                        _ when QueryOptionKeys.TopKeys.Contains(option) => ExpandTop,
+                        _ when QueryOptionKeys.SkipKeys.Contains(option) => ExpandSkip,
+                        _ when QueryOptionKeys.OrderbyKeys.Contains(option) => ExpandOrder,
+                        _ => null
+                    };
 
                     if (handler != null)
                     {
@@ -338,8 +227,14 @@ namespace OpenApiQuery
             private void NestedExpand(ExpandClause clause)
             {
                 var nestedParser = new ExpandClauseParser(_parser, clause.NestedExpands);
-                clause.NestedExpandParameter = Expression.Parameter(clause.ItemType);
+                clause.NestedExpandParameter = Expression.Parameter(clause.ItemType, "it");
                 nestedParser.Parse(clause.NestedExpandParameter);
+            }
+
+            private void ExpandSelect(ExpandClause clause)
+            {
+                clause.Select = new SelectQueryOption(clause.ItemType);
+                clause.Select.Initialize(_parser, _modelStateDictionary);
             }
 
             private void ExpandFilter(ExpandClause clause)

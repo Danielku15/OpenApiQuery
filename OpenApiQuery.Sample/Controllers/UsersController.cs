@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using OpenApiQuery.Sample.Data;
 using OpenApiQuery.Sample.Models;
 

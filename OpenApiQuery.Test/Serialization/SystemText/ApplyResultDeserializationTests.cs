@@ -28,16 +28,16 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                 ]
             }");
 
-            Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Count);
+            Assert.AreEqual(2, objects.Value.Count);
 
-            Assert.AreEqual(1, objects.ResultItems[0].IntProp);
-            Assert.AreEqual(47.11, objects.ResultItems[0].DoubleProp);
-            Assert.AreEqual("Hello World", objects.ResultItems[0].StringProp);
+            Assert.AreEqual(1, objects.Value.First().IntProp);
+            Assert.AreEqual(47.11, objects.Value.First().DoubleProp);
+            Assert.AreEqual("Hello World", objects.Value.First().StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].IntProp);
-            Assert.AreEqual(47.12, objects.ResultItems[1].DoubleProp);
-            Assert.AreEqual("Foo Bar", objects.ResultItems[1].StringProp);
+            Assert.AreEqual(2, objects.Value.ElementAt(1).IntProp);
+            Assert.AreEqual(47.12, objects.Value.ElementAt(1).DoubleProp);
+            Assert.AreEqual("Foo Bar", objects.Value.ElementAt(1).StringProp);
         }
 
         [TestMethod]
@@ -65,19 +65,19 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         ""subProp"": -47
                     }
                 ]
-            }", typeHandler);
+            }");
 
-            Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Count);
+            Assert.AreEqual(2, objects.Value.Count);
 
-            Assert.IsInstanceOfType(objects.ResultItems[0], typeof(Sub1));
-            var sub1 = (Sub1)objects.ResultItems[0];
+            Assert.IsInstanceOfType(objects.Value.First(), typeof(Sub1));
+            var sub1 = (Sub1)objects.Value.First();
             Assert.AreEqual(1, sub1.BaseProp);
             Assert.AreEqual(47.11, sub1.Sub1Prop);
             Assert.AreEqual(47, sub1.SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[1], typeof(Sub2));
-            var sub2 = (Sub2)objects.ResultItems[1];
+            Assert.IsInstanceOfType(objects.Value.ElementAt(1), typeof(Sub2));
+            var sub2 = (Sub2)objects.Value.ElementAt(1);
             Assert.AreEqual(2, sub2.BaseProp);
             Assert.AreEqual("Test", sub2.Sub2Prop);
             Assert.AreEqual(-47, sub2.SubProp);
@@ -121,26 +121,26 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                 ]
             }");
 
-            Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Count);
+            Assert.AreEqual(2, objects.Value.Count);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items.Length);
-            Assert.AreEqual(1, objects.ResultItems[0].Items[0].IntProp);
-            Assert.AreEqual(47.11, objects.ResultItems[0].Items[0].DoubleProp);
-            Assert.AreEqual("A", objects.ResultItems[0].Items[0].StringProp);
+            Assert.AreEqual(2, objects.Value.First().Items.Length);
+            Assert.AreEqual(1, objects.Value.First().Items[0].IntProp);
+            Assert.AreEqual(47.11, objects.Value.First().Items[0].DoubleProp);
+            Assert.AreEqual("A", objects.Value.First().Items[0].StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items[1].IntProp);
-            Assert.AreEqual(47.12, objects.ResultItems[0].Items[1].DoubleProp);
-            Assert.AreEqual("B", objects.ResultItems[0].Items[1].StringProp);
+            Assert.AreEqual(2, objects.Value.First().Items[1].IntProp);
+            Assert.AreEqual(47.12, objects.Value.First().Items[1].DoubleProp);
+            Assert.AreEqual("B", objects.Value.First().Items[1].StringProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].Items.Length);
-            Assert.AreEqual(3, objects.ResultItems[1].Items[0].IntProp);
-            Assert.AreEqual(47.13, objects.ResultItems[1].Items[0].DoubleProp);
-            Assert.AreEqual("C", objects.ResultItems[1].Items[0].StringProp);
+            Assert.AreEqual(2, objects.Value.ElementAt(1).Items.Length);
+            Assert.AreEqual(3, objects.Value.ElementAt(1).Items[0].IntProp);
+            Assert.AreEqual(47.13, objects.Value.ElementAt(1).Items[0].DoubleProp);
+            Assert.AreEqual("C", objects.Value.ElementAt(1).Items[0].StringProp);
 
-            Assert.AreEqual(4, objects.ResultItems[1].Items[1].IntProp);
-            Assert.AreEqual(47.14, objects.ResultItems[1].Items[1].DoubleProp);
-            Assert.AreEqual("D", objects.ResultItems[1].Items[1].StringProp);
+            Assert.AreEqual(4, objects.Value.ElementAt(1).Items[1].IntProp);
+            Assert.AreEqual(47.14, objects.Value.ElementAt(1).Items[1].DoubleProp);
+            Assert.AreEqual("D", objects.Value.ElementAt(1).Items[1].StringProp);
         }
 
         [TestMethod]
@@ -189,32 +189,32 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                         ]
                     }
                 ]
-            }", typeHandler);
+            }");
 
-            Assert.AreEqual(2, objects.TotalCount);
-            Assert.AreEqual(2, objects.ResultItems.Length);
+            Assert.AreEqual(2, objects.Count);
+            Assert.AreEqual(2, objects.Value.Count);
 
-            Assert.AreEqual(2, objects.ResultItems[0].Items.Length);
-            Assert.IsInstanceOfType(objects.ResultItems[0].Items[0], typeof(Sub1));
-            Assert.AreEqual(1, ((Sub1)objects.ResultItems[0].Items[0]).BaseProp);
-            Assert.AreEqual(47.11, ((Sub1)objects.ResultItems[0].Items[0]).Sub1Prop);
-            Assert.AreEqual(47, ((Sub1)objects.ResultItems[0].Items[0]).SubProp);
+            Assert.AreEqual(2, objects.Value.First().Items.Length);
+            Assert.IsInstanceOfType(objects.Value.First().Items[0], typeof(Sub1));
+            Assert.AreEqual(1, ((Sub1)objects.Value.First().Items[0]).BaseProp);
+            Assert.AreEqual(47.11, ((Sub1)objects.Value.First().Items[0]).Sub1Prop);
+            Assert.AreEqual(47, ((Sub1)objects.Value.First().Items[0]).SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[0].Items[1], typeof(Sub2));
-            Assert.AreEqual(2, ((Sub2)objects.ResultItems[0].Items[1]).BaseProp);
-            Assert.AreEqual("Test", ((Sub2)objects.ResultItems[0].Items[1]).Sub2Prop);
-            Assert.AreEqual(-47, ((Sub2)objects.ResultItems[0].Items[1]).SubProp);
+            Assert.IsInstanceOfType(objects.Value.First().Items[1], typeof(Sub2));
+            Assert.AreEqual(2, ((Sub2)objects.Value.First().Items[1]).BaseProp);
+            Assert.AreEqual("Test", ((Sub2)objects.Value.First().Items[1]).Sub2Prop);
+            Assert.AreEqual(-47, ((Sub2)objects.Value.First().Items[1]).SubProp);
 
-            Assert.AreEqual(2, objects.ResultItems[1].Items.Length);
-            Assert.IsInstanceOfType(objects.ResultItems[1].Items[0], typeof(Sub2));
-            Assert.AreEqual(3, ((Sub2)objects.ResultItems[1].Items[0]).BaseProp);
-            Assert.AreEqual("A", ((Sub2)objects.ResultItems[1].Items[0]).Sub2Prop);
-            Assert.AreEqual(-11, ((Sub2)objects.ResultItems[1].Items[0]).SubProp);
+            Assert.AreEqual(2, objects.Value.ElementAt(1).Items.Length);
+            Assert.IsInstanceOfType(objects.Value.ElementAt(1).Items[0], typeof(Sub2));
+            Assert.AreEqual(3, ((Sub2)objects.Value.ElementAt(1).Items[0]).BaseProp);
+            Assert.AreEqual("A", ((Sub2)objects.Value.ElementAt(1).Items[0]).Sub2Prop);
+            Assert.AreEqual(-11, ((Sub2)objects.Value.ElementAt(1).Items[0]).SubProp);
 
-            Assert.IsInstanceOfType(objects.ResultItems[1].Items[1], typeof(Sub1));
-            Assert.AreEqual(4, ((Sub1)objects.ResultItems[1].Items[1]).BaseProp);
-            Assert.AreEqual(47.14, ((Sub1)objects.ResultItems[1].Items[1]).Sub1Prop);
-            Assert.AreEqual(12, ((Sub1)objects.ResultItems[1].Items[1]).SubProp);
+            Assert.IsInstanceOfType(objects.Value.ElementAt(1).Items[1], typeof(Sub1));
+            Assert.AreEqual(4, ((Sub1)objects.Value.ElementAt(1).Items[1]).BaseProp);
+            Assert.AreEqual(47.14, ((Sub1)objects.Value.ElementAt(1).Items[1]).Sub1Prop);
+            Assert.AreEqual(12, ((Sub1)objects.Value.ElementAt(1).Items[1]).SubProp);
         }
 
         [TestMethod]
@@ -280,11 +280,11 @@ namespace OpenApiQuery.Test.Serialization.SystemText
         {
             var objects = Deserialize<OpenApiQueryResult<ArrayWrapper<T>>>(json);
 
-            Assert.AreEqual(expected.Length, objects.ResultItems.Length);
+            Assert.AreEqual(expected.Length, objects.Value.Count);
 
             for (var i = 0; i < expected.Length; i++)
             {
-                var actual = objects.ResultItems[i].Items;
+                var actual = objects.Value.ElementAt(i).Items;
 
                 Assert.AreEqual(string.Join(",", expected[i]),
                     string.Join(",", actual),
@@ -302,9 +302,9 @@ namespace OpenApiQuery.Test.Serialization.SystemText
                 ]
             }");
 
-            Assert.AreEqual(2, objects.ResultItems.Length);
-            Assert.AreEqual("A:1,b:2,C:3", string.Join(",", objects.ResultItems[0].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
-            Assert.AreEqual("d:4,E:5,F:6", string.Join(",", objects.ResultItems[1].Select(kvp => $"{kvp.Key}:{kvp.Value}")));
+            Assert.AreEqual(2, objects.Value.Count);
+            Assert.AreEqual("A:1,b:2,C:3", string.Join(",", objects.Value.First().Select(kvp => $"{kvp.Key}:{kvp.Value}")));
+            Assert.AreEqual("d:4,E:5,F:6", string.Join(",", objects.Value.ElementAt(1).Select(kvp => $"{kvp.Key}:{kvp.Value}")));
         }
     }
 }

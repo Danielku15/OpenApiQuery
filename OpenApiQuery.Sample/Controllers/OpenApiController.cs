@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OpenApiQuery.EntityFramework;
 using OpenApiQuery.Sample.Data;
 using OpenApiQuery.Sample.Models;
 
@@ -23,7 +24,7 @@ namespace OpenApiQuery.Sample.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAsync(
-            OpenApiQueryOptions<T> queryOptions,
+            OpenApiQueryOptions<T, EntityFrameworkMaterializer> queryOptions,
             CancellationToken cancellationToken)
         {
             return Ok(await queryOptions.ApplyToAsync(_records, cancellationToken));
@@ -32,14 +33,14 @@ namespace OpenApiQuery.Sample.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAsync(
             int id,
-            OpenApiQueryOptions<T> queryOptions,
+            OpenApiQueryOptions<T, EntityFrameworkMaterializer> queryOptions,
             CancellationToken cancellationToken)
         {
             var result = await queryOptions.ApplyToSingleAsync(
                 _records.Where(u => u.Id == id),
                 cancellationToken
             );
-            if (result.ResultItem == null)
+            if (result.Value == null)
             {
                 return NotFound();
             }

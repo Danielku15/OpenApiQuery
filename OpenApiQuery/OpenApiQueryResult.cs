@@ -1,20 +1,25 @@
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
 namespace OpenApiQuery
 {
+    [DataContract]
     public class OpenApiQueryResult<T>
     {
-        internal OpenApiQueryOptions<T> Options { get; set; }
-        public long? TotalCount { get; set; }
-        public T[] ResultItems { get; set; }
+        [DataMember(Name = "@odata.count", EmitDefaultValue = false)]
+        public long? Count { get; set; }
+        [DataMember(Name = "value")]
+        public IReadOnlyCollection<T> Value { get; set; }
+
+        public OpenApiQueryResult(long? count, IReadOnlyCollection<T> value)
+        {
+            Count = count;
+            Value = value;
+        }
 
         public OpenApiQueryResult()
         {
-        }
 
-        internal OpenApiQueryResult(OpenApiQueryOptions<T> options, T[] resultItems, long? totalCount)
-        {
-            Options = options;
-            ResultItems = resultItems;
-            TotalCount = totalCount;
         }
     }
 }

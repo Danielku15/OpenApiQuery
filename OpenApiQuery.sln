@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery", "OpenApiQuer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery.Test", "OpenApiQuery.Test\OpenApiQuery.Test.csproj", "{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery.Mongo", "OpenApiQuery.Mongo\OpenApiQuery.Mongo.csproj", "{03B606A0-2D8C-40F1-994B-F014DA8824D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiQuery.EntityFramework", "OpenApiQuery.EntityFramework\OpenApiQuery.EntityFramework.csproj", "{D1D7AD10-8DE0-4B15-89CA-1DED3CBEDAC5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +28,13 @@ Global
 		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{111B7733-4DBE-4C73-A7E4-0E5AE01EBF6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03B606A0-2D8C-40F1-994B-F014DA8824D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03B606A0-2D8C-40F1-994B-F014DA8824D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03B606A0-2D8C-40F1-994B-F014DA8824D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03B606A0-2D8C-40F1-994B-F014DA8824D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1D7AD10-8DE0-4B15-89CA-1DED3CBEDAC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1D7AD10-8DE0-4B15-89CA-1DED3CBEDAC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1D7AD10-8DE0-4B15-89CA-1DED3CBEDAC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1D7AD10-8DE0-4B15-89CA-1DED3CBEDAC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -17,8 +17,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users");
-            Assert.IsNull(response.TotalCount, "response.TotalCount == null");
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.IsNull(response.Count, "response.Count == null");
+            Assert.AreEqual(testUserCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -40,8 +40,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$count=false");
-            Assert.IsNull(response.TotalCount, "response.TotalCount == null");
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.IsNull(response.Count, "response.Count == null");
+            Assert.AreEqual(testUserCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -52,8 +52,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?$count=true");
-            Assert.AreEqual(testUserCount, response.TotalCount);
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Count);
+            Assert.AreEqual(testUserCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -64,8 +64,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>("/users?count=true");
-            Assert.AreEqual(testUserCount, response.TotalCount);
-            Assert.AreEqual(testUserCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Count);
+            Assert.AreEqual(testUserCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -77,8 +77,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$count=true&$skip=1&$top={selectCount}");
-            Assert.AreEqual(testUserCount, response.TotalCount);
-            Assert.AreEqual(selectCount, response.ResultItems.Length);
+            Assert.AreEqual(testUserCount, response.Count);
+            Assert.AreEqual(selectCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -90,8 +90,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$count=true&$filter=Id le {filterCount}");
-            Assert.AreEqual(filterCount, response.TotalCount);
-            Assert.AreEqual(filterCount, response.ResultItems.Length);
+            Assert.AreEqual(filterCount, response.Count);
+            Assert.AreEqual(filterCount, response.Value.Count);
         }
 
         [TestMethod]
@@ -104,8 +104,8 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetQueryAsync<User>($"/users?$count=true&$skip=1&$top={selectCount}&$filter=Id le {filterCount}");
-            Assert.AreEqual(filterCount, response.TotalCount);
-            Assert.AreEqual(selectCount, response.ResultItems.Length);
+            Assert.AreEqual(filterCount, response.Count);
+            Assert.AreEqual(selectCount, response.Value.Count);
         }
     }
 }

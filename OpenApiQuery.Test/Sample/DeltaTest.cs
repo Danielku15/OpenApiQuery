@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -25,7 +26,7 @@ namespace OpenApiQuery.Test.Sample
             });
             using var client = server.CreateClient();
 
-            var user = (await client.GetQueryAsync<User>("/users")).ResultItems[0];
+            var user = (await client.GetQueryAsync<User>("/users")).Value.First();
             Assert.AreEqual("A", user.FirstName);
             Assert.AreEqual("B", user.LastName);
 
@@ -39,7 +40,7 @@ namespace OpenApiQuery.Test.Sample
 
             Assert.AreEqual(HttpStatusCode.OK, patchResponse.StatusCode, "Response was: " + patchResponseText);
 
-            var changedUser = (await client.GetQueryAsync<User>("/users/")).ResultItems[0];
+            var changedUser = (await client.GetQueryAsync<User>("/users/")).Value.First();
             Assert.AreEqual("Foo", changedUser.FirstName);
             Assert.AreEqual("Bar", changedUser.LastName);
         }

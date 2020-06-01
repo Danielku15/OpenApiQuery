@@ -1,18 +1,16 @@
+using System.Runtime.Serialization;
+
 namespace OpenApiQuery
 {
+    [DataContract]
     public class OpenApiQuerySingleResult<T>
     {
-        internal OpenApiQueryOptions<T> Options { get; set; }
-        public T ResultItem { get; set; }
+        [DataMember(Name = "value")]
+        public T Value { get; set; }
 
-        public OpenApiQuerySingleResult()
+        public OpenApiQuerySingleResult(T value)
         {
-        }
-
-        internal OpenApiQuerySingleResult(OpenApiQueryOptions<T> options, T resultItem)
-        {
-            Options = options;
-            ResultItem = resultItem;
+            Value = value;
         }
     }
 }

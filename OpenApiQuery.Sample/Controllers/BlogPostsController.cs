@@ -1,6 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using OpenApiQuery.Sample.Data;
 using OpenApiQuery.Sample.Models;
 
