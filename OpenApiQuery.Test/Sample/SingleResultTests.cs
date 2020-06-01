@@ -31,9 +31,9 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetSingleQueryAsync<User>("/users/1?$select=firstName,email");
-            Assert.AreEqual("A", response.Value.FirstName);
-            Assert.AreEqual(null, response.Value.LastName);
-            Assert.AreEqual("C", response.Value.EMail);
+            Assert.AreEqual("A", response.FirstName);
+            Assert.AreEqual(null, response.LastName);
+            Assert.AreEqual("C", response.EMail);
         }
 
         [TestMethod]
@@ -86,7 +86,7 @@ namespace OpenApiQuery.Test.Sample
             var json = await response.Content.ReadAsStringAsync();
             var document = JsonDocument.Parse(json);
 
-            var item = document.RootElement.GetProperty("value");
+            var item = document.RootElement;
             Assert.AreEqual("firstname,email",
                 string.Join(",",
                     item.EnumerateObject().Where(o => o.Value.ValueKind != JsonValueKind.Null).Select(o => o.Name.ToLowerInvariant())));

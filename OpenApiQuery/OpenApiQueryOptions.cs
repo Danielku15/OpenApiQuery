@@ -120,7 +120,7 @@ namespace OpenApiQuery
             return new OpenApiQueryResult<T>(count, result);
         }
 
-        public async Task<OpenApiQuerySingleResult<T>> ApplyToSingleAsync(
+        public async Task<T> ApplyToSingleAsync(
             IQueryable<T> queryable,
             CancellationToken cancellationToken)
         {
@@ -128,7 +128,7 @@ namespace OpenApiQuery
 
             var result = await default(TMaterializer).SingleOrDefaultAsync(queryable, cancellationToken);
 
-            return new OpenApiQuerySingleResult<T>(result);
+            return result;
         }
     }
 }

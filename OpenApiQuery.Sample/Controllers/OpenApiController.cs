@@ -40,7 +40,7 @@ namespace OpenApiQuery.Sample.Controllers
                 _records.Where(u => u.Id == id),
                 cancellationToken
             );
-            if (result.Value == null)
+            if (result == null)
             {
                 return NotFound();
             }

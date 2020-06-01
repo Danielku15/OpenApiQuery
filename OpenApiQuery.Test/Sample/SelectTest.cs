@@ -299,7 +299,7 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetSingleQueryAsync<User>("/users/1?$expand=blogs");
-            Assert.AreEqual("A,B,C,D", string.Join(",", response.Value.Blogs.Select(u => u.Name)));
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.Blogs.Select(u => u.Name)));
         }
 
         [TestMethod]
@@ -337,12 +337,12 @@ namespace OpenApiQuery.Test.Sample
             using var client = server.CreateClient();
 
             var response = await client.GetSingleQueryAsync<User>("/users/1?$expand=blogs($expand=posts)");
-            Assert.IsNotNull(response.Value.Blogs);
-            Assert.AreEqual("A,B,C,D", string.Join(",", response.Value.Blogs.Select(u => u.Name)));
-            Assert.AreEqual(1, response.Value.Blogs.ElementAt(0).Posts.Count);
-            Assert.AreEqual(2, response.Value.Blogs.ElementAt(1).Posts.Count);
-            Assert.AreEqual(3, response.Value.Blogs.ElementAt(2).Posts.Count);
-            Assert.AreEqual(4, response.Value.Blogs.ElementAt(3).Posts.Count);
+            Assert.IsNotNull(response.Blogs);
+            Assert.AreEqual("A,B,C,D", string.Join(",", response.Blogs.Select(u => u.Name)));
+            Assert.AreEqual(1, response.Blogs.ElementAt(0).Posts.Count);
+            Assert.AreEqual(2, response.Blogs.ElementAt(1).Posts.Count);
+            Assert.AreEqual(3, response.Blogs.ElementAt(2).Posts.Count);
+            Assert.AreEqual(4, response.Blogs.ElementAt(3).Posts.Count);
         }
     }
 }

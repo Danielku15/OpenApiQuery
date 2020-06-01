@@ -36,7 +36,7 @@ namespace OpenApiQuery.Test
                 throw;
             }
         }
-        public static async Task<OpenApiQuerySingleResult<T>> GetSingleQueryAsync<T>(
+        public static async Task<T> GetSingleQueryAsync<T>(
             this HttpClient client,
             string requestUri,
             CancellationToken cancellationToken = default)
@@ -47,7 +47,7 @@ namespace OpenApiQuery.Test
             try
             {
                 var json = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<OpenApiQuerySingleResult<T>>(json);
+                return JsonConvert.DeserializeObject<T>(json);
             }
             catch (JsonException e)
             {
