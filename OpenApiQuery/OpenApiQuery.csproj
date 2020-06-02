@@ -3,12 +3,19 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp3.0</TargetFramework>
 
-        <PackageVersion>1.0.0</PackageVersion>
+		<MainVersion>1.0.0</MainVersion>
+		<BuildNumber Condition=" '$(BuildNumber)' == ''">$(GITHUB_RUN_NUMBER)</BuildNumber>
+		<BuildNumber Condition=" '$(BuildNumber)' == ''">0</BuildNumber>
+
+		<Version>$(MainVersion)-alpha.$(BuildNumber)</Version>
+		<AssemblyVersion>$(MainVersion).$(BuildNumber)</AssemblyVersion>
+		<FileVersion>$(MainVersion).$(BuildNumber)</FileVersion>
+
         <PackageId>OpenApiQuery</PackageId>
         <Title>OpenApiQuery</Title>
         <Authors>Daniel Kuschny</Authors>
         <Description>OData based query language for your ASP.net core APIs</Description>
-        <Copyright>(C) 2019 Daniel Kuschny</Copyright>
+        <Copyright>© 2020 Daniel Kuschny and Contributors</Copyright>
         <PackageProjectUrl>https://github.com/Danielku15/OpenApiQuery</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/Danielku15/OpenApiQuery</RepositoryUrl>

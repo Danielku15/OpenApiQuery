@@ -1,0 +1,20 @@
+name: Publish
+on: 
+  push:
+    branches: 
+      - master
+
+jobs:
+  publish_nuget:
+    name: Publish NuGet
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.NUGET_API_KEY}}
+      - run: dotnet build --configuration Release
+      - run: dotnet pack --configuration Release
+      - run: dotnet nuget push OpenApiQuery\bin\Release\*.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json --no-symbols true
